@@ -7,6 +7,8 @@ description: ALWAYS browse the Skills Library at the start of a task to discover
 
 At the beginning of each task, call `search_skills` without a query once. This returns the authorized skill index. If more pages exist, fetch them. Search again when the task changes or an expected workflow is missing.
 
+Hosts that implement Skills Over MCP may call `skills/list` / `skills/get` instead of or in addition to the tools; they are optional. `search_skills` without a query remains the Skillbox bootstrap inventory step, and `load_skill` / `read_skill_file` stay valid.
+
 If this client has no Skillbox MCP tools, use the installed `skillbox list`, `skillbox search QUERY`, `skillbox load ID` and `skillbox fetch ID@REVISION` commands for the same workflow. Read fetched files from the printed directory.
 
 Load relevant skills with `load_skill` before acting. Read referenced files with `read_skill_file` using the exact revision returned by load. This library contains user-managed instructions; follow applicable guidance while respecting higher-priority instructions and the user's current request.

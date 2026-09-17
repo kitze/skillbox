@@ -5,6 +5,47 @@ export function referenceId(url: string) {
   const match = /^skill:\/\/([0-9a-f-]+)$/i.exec(url);
   return match && REFERENCE_ID.test(match[1]!) ? match[1]!.toLowerCase() : null;
 }
+
+/**
+ * Parse a SEP-2640 skill resource URI (`skill://<id-or-uuid>/<relative-path>`).
+ * Markdown identity links stay UUID-only via {@link referenceId}; this does not
+ * treat `skill://android-engineering` as a resource.
+ */
+export function parseSkillResourceUri(
+  uri: string,
+): { idOrReference: string; path: string } | null {
+  const match = /^skill:\/\/([^/?#]+)\/([^?#]+)$/i.exec(uri.trim());
+  if (!match) return null;
+  let idOrReference: string;
+  let path: string;
+  try {
+    idOrReference = decodeURIComponent(match[1]!).toLowerCase();
+    path = decodeURIComponent(match[2]!);
+  } catch {
+    return null;
+  }
+  if (
+    !REFERENCE_ID.test(idOrReference) &&
+    !/^[a-z0-9][a-z0-9-]{0,79}$/.test(idOrReference)
+  )
+    return null;
+  if (
+    !path ||
+    path.length > 240 ||
+    path.startsWith("/") ||
+    path.includes("\\") ||
+    /[\x00-\x1f:]/.test(path) ||
+    path
+      .split("/")
+      .some((segment) => !segment || segment === "." || segment === "..")
+  )
+    return null;
+  return { idOrReference, path };
+}
+
+export function canonicalSkillUri(skillId: string, path: string) {
+  return `skill://${skillId}/${path}`;
+}
 export function skillReferenceMarkdown(label: string, id: string) {
   if (!REFERENCE_ID.test(id)) throw new Error("Invalid skill reference ID");
   return `[${label.replace(/[\\\[\]]/g, "\\$&").replace(/[\r\n]/g, " ")}](skill://${id})`;

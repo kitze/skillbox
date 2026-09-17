@@ -48,6 +48,26 @@ export type Principal = {
   allSkills: boolean;
   skillIds: string[];
 };
+export type SkillResourceDescriptor = {
+  uri: string;
+  digest: string;
+  size: number;
+};
+export type SkillExtensionMeta = {
+  "io.modelcontextprotocol.skills/revision": string;
+  "io.modelcontextprotocol.skills/referenceId": string;
+  "io.modelcontextprotocol.skills/checksum": string;
+};
+export type SkillExtensionEntry = {
+  uri: string;
+  frontmatter: {
+    name: string;
+    description: string;
+    [key: string]: unknown;
+  };
+  resources: SkillResourceDescriptor[];
+  _meta: SkillExtensionMeta;
+};
 export type SkillSummary = {
   referenceId?: string;
   characters?: number;

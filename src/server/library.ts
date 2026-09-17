@@ -376,6 +376,16 @@ export async function revisionFor(p: Principal, id: string, revision?: string) {
   if (!r) throw new Problem(404, "Skill or revision not found");
   return r;
 }
+/** Current granted leaf used by Skills Over MCP. Bundles, disabled, and archived entries are absent. */
+export async function servedSkillRevision(p: Principal, id: string) {
+  id = await resolveReferenceId(id);
+  if (!(await canRead(p, id)))
+    throw new Problem(404, "Skill or revision not found");
+  const [s] = await db.select().from(skills).where(eq(skills.id, id));
+  if (!s || s.kind !== "skill" || s.archived || s.disabled)
+    throw new Problem(404, "Skill or revision not found");
+  return { skill: s, revision: await revisionFor(p, id) };
+}
 export async function load(p: Principal, id: string, revision?: string) {
   id = await resolveReferenceId(id);
   const r = await revisionFor(p, id, revision);

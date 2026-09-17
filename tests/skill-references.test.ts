@@ -1,6 +1,7 @@
 import { test, expect } from "bun:test";
 import {
   extractSkillReferences,
+  parseSkillResourceUri,
   referenceId,
   skillReferenceMarkdown,
 } from "../src/skill-references";
@@ -11,6 +12,16 @@ test("references use immutable UUIDs, not labels or slugs", () => {
   expect(referenceId("skill://android-engineering")).toBeNull();
   expect(referenceId(`https://${a}`)).toBeNull();
   expect(referenceId(`skill://${a}?x=1`)).toBeNull();
+  expect(parseSkillResourceUri("skill://android-engineering")).toBeNull();
+  expect(parseSkillResourceUri("skill://android-engineering/SKILL.md")).toEqual({
+    idOrReference: "android-engineering",
+    path: "SKILL.md",
+  });
+  expect(parseSkillResourceUri(`skill://${a}/references/guide.md`)).toEqual({
+    idOrReference: a,
+    path: "references/guide.md",
+  });
+  expect(parseSkillResourceUri("skill://android-engineering/SKILL.md?x=1")).toBeNull();
   expect(
     extractSkillReferences(skillReferenceMarkdown("[Brackets] & names", a)),
   ).toEqual([a]);

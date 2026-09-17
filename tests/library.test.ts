@@ -27,6 +27,7 @@ import {
   recommendationCatalog,
   recommendSkills,
   archiveSkill,
+  servedSkillRevision,
 } from "../src/server/library";
 import { createRecommender, EvaluationUnavailable } from "../src/server/recommendations";
 import * as access from "../src/server/access";
@@ -81,7 +82,6 @@ afterAll(async () => {
     .delete(events)
     .where(inArray(events.skillId, [...ids, ...graphIds, ...disabledIds]));
   await db.delete(events).where(eq(events.clientId, clientId));
-  await connection.end();
 });
 test("nested bundles deduplicate leaves, inherit grants and pin returned revisions", async () => {
   await saveBundle(
@@ -408,6 +408,24 @@ test("allowlist filters browse and blocks direct content, history and bundles", 
     expect(denied.status).toBe(404);
     expect(missing.status).toBe(404);
   }
+});
+test("MCP-served leaves omit unauthorized, disabled, archived and bundle ids", async () => {
+  const reader = await authenticate(
+    new Request("http://test/mcp", { headers: headers() }),
+  );
+  const granted = await servedSkillRevision(reader, ids[0]);
+  expect(granted.skill.id).toBe(ids[0]);
+  expect(granted.skill.kind).toBe("skill");
+  await expect(servedSkillRevision(reader, ids[1])).rejects.toMatchObject({
+    status: 404,
+  });
+  await expect(servedSkillRevision(reader, graphIds[0])).rejects.toMatchObject({
+    status: 404,
+  });
+  const archived = graphIds[3];
+  await expect(servedSkillRevision(ADMIN, archived)).rejects.toMatchObject({
+    status: 404,
+  });
 });
 test("reader cannot publish or administer clients", async () => {
   expect(

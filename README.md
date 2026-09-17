@@ -172,6 +172,8 @@ node cli/skillbox.mjs publish ./my-skill my-skill EXPECTED_REVISION
 
 Base MCP tools: `search_skills`, `recommend_skills`, `load_skill`, `read_skill_file`, `report_skill_use`. Write/proposal tools appear according to permissions. Recommendations are additive: unqueried `search_skills` remains the mandatory task-start inventory step. Load selected skills with returned revisions before applying them.
 
+SEP-capable hosts may also call `skills/list`, `skills/get`, and `resources/read` on `skill://<id>/…` files. Those listings are grant-scoped snapshots of each skill's **current** revision (with `sha256:` per-file digests); they do not replace the tools, and `search_skills` remains the Skillbox bootstrap inventory step. Pin a frozen tree with `skillbox fetch id@REVISION`. Historical revisions stay available through `load_skill({revision})` and HTTP, not through SEP listing.
+
 Fetching validates every path, file hash, size, executable flag and package checksum, then writes atomically. It never runs code or installs dependencies. Revoking a key blocks future access but cannot retract already downloaded files. Bundles expand grants into deduplicated current leaf skills; references never grant access by themselves.
 
 `scripts/install-client.py` optionally configures Codex, Claude or Cursor from explicit per-client credentials on stdin, preserving existing settings and making local backups. Review any installer before running it.
