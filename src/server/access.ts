@@ -17,10 +17,17 @@ export const profileSchema = z.object({
     delete: z.boolean(),
     propose: z.boolean(),
   }),
+  defaultHarness: z
+    .string()
+    .trim()
+    .max(160)
+    .nullable()
+    .optional()
+    .transform((value) => (value ? value : null)),
 });
 export async function saveProfile(
   p: Principal,
-  input: z.infer<typeof profileSchema>,
+  input: z.input<typeof profileSchema>,
   id: string = randomUUID(),
   version?: string,
 ) {

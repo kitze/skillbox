@@ -58,4 +58,7 @@ export async function migrate() {
     await connection`UPDATE skills SET package_metrics=${JSON.stringify(packageMetrics(row.files))}::jsonb WHERE id=${row.id} AND revision=${row.revision}`;
   await connection`ALTER TABLE skills ADD COLUMN IF NOT EXISTS reference_id text NOT NULL DEFAULT gen_random_uuid()::text`;
   await connection`CREATE UNIQUE INDEX IF NOT EXISTS skills_reference_id_idx ON skills(reference_id)`;
+  await connection`ALTER TABLE skills ADD COLUMN IF NOT EXISTS compatibility text NOT NULL DEFAULT ''`;
+  await connection`ALTER TABLE skills ADD COLUMN IF NOT EXISTS harness_policy jsonb NOT NULL DEFAULT '{"mode":"any","products":[]}'::jsonb`;
+  await connection`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS default_harness text`;
 }

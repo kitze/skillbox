@@ -85,6 +85,8 @@ node cli/skillbox.mjs publish ./my-skill my-skill EXPECTED_REVISION
 
 Base MCP tools: `search_skills`, `recommend_skills`, `load_skill`, `read_skill_file`, `report_skill_use`. Write/proposal tools appear according to permissions. Recommendations are additive: unqueried `search_skills` remains the mandatory task-start inventory step. Load selected skills with returned revisions before applying them.
 
+When a client identifies its product (`X-Skillbox-Harness`, MCP `initialize` `clientInfo.name`, or an optional profile default harness), Skillbox filters **discovery** to skills that either leave `compatibility` unspecified, describe only an environment (git, docker, …), or match that product. Prefer structured frontmatter `metadata.skillbox.harnesses: [cursor, claude-code]` when a skill should not be offered to every agent; the Agent Skills `compatibility` string is the fallback. Clients that omit a harness still receive the full granted catalog. Filtering never replaces grants: `load_skill` of an explicitly named, granted skill still succeeds. The owner library UI always shows every skill, with a muted product badge when a harness policy is set.
+
 Fetching validates every path, file hash, size, executable flag and package checksum, then writes atomically. It never runs code or installs dependencies. Revoking a key blocks future access but cannot retract already downloaded files. Bundles expand grants into deduplicated current leaf skills; references never grant access by themselves.
 
 `scripts/install-client.py` optionally configures Codex, Claude or Cursor from explicit per-client credentials on stdin, preserving existing settings and making local backups. Review any installer before running it.
