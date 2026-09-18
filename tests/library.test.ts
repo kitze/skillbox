@@ -1373,6 +1373,202 @@ test("separate create/update/delete permissions and proposals preserve revision 
     await db.delete(skills).where(inArray(skills.id, [id, other]));
   }
 });
+async function mcpTool(
+  token: string,
+  name: string,
+  args: Record<string, unknown> = {},
+  extra: Record<string, string> = {},
+) {
+  const r = await app.request("/mcp", {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + token,
+      "Content-Type": "application/json",
+      Accept: "application/json, text/event-stream",
+      ...extra,
+    },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "tools/call",
+      params: { name, arguments: args },
+    }),
+  });
+  expect(r.status).toBe(200);
+  const body = await r.json();
+  if (body.result?.isError) throw new Error(body.result.content[0].text);
+  return JSON.parse(body.result.content[0].text);
+}
+
+test("reader MCP search_skills filters Claude-only skills for Cursor but load still works", async () => {
+  const claudeId = "test-compat-claude-" + randomUUID().slice(0, 8);
+  const openId = "test-compat-open-" + randomUUID().slice(0, 8);
+  ids.push(claudeId, openId);
+  const skill = (id: string, extra = "") => [
+    makeFile(
+      "SKILL.md",
+      `---\nname: ${id}\ndescription: Quality workflow for a fixture\n${extra}---\nRead the docs.\n`,
+    ),
+  ];
+  await publish(
+    ADMIN,
+    claudeId,
+    skill(claudeId, "compatibility: Designed for Claude Code\n"),
+    null,
+  );
+  await publish(ADMIN, openId, skill(openId), null);
+  const profile = await access.saveProfile(ADMIN, {
+    name: "Harness fixture " + randomUUID(),
+    allSkills: false,
+    skillIds: [claudeId, openId],
+    permissions: {
+      create: false,
+      update: false,
+      delete: false,
+      propose: false,
+    },
+  });
+  const c = await access.uniqueClient(
+    "Cursor fixture " + randomUUID(),
+    profile.id,
+  );
+  try {
+    const withHarness = await mcpTool(
+      c.token,
+      "search_skills",
+      {},
+      { "X-Skillbox-Harness": "cursor" },
+    );
+    expect(withHarness.items.map((s: { id: string }) => s.id)).toContain(openId);
+    expect(withHarness.items.map((s: { id: string }) => s.id)).not.toContain(
+      claudeId,
+    );
+    expect(withHarness.compatibility).toMatchObject({
+      harness: "cursor",
+      filtered: true,
+    });
+    expect(withHarness.compatibility.skipped).toBeGreaterThanOrEqual(1);
+    expect(withHarness.compatibility.skippedIds).toBeUndefined();
+
+    const withoutHarness = await mcpTool(c.token, "search_skills");
+    expect(withoutHarness.items.map((s: { id: string }) => s.id)).toContain(
+      claudeId,
+    );
+    expect(withoutHarness.compatibility).toBeUndefined();
+
+    const loaded = await mcpTool(
+      c.token,
+      "load_skill",
+      { id: claudeId },
+      { "X-Skillbox-Harness": "cursor" },
+    );
+    expect(loaded.id).toBe(claudeId);
+
+    const principal = () =>
+      authenticate(
+        new Request("http://test/mcp", {
+          headers: {
+            Authorization: "Bearer " + c.token,
+            "X-Skillbox-Harness": "cursor",
+          },
+        }),
+      );
+    expect(
+      (await recommendationCatalog(await principal())).candidates.map(
+        (s) => s.id,
+      ),
+    ).toEqual([openId]);
+    const rank = createRecommender(async (_task, candidates) => {
+      expect(candidates.map((s) => s.id)).toEqual([openId]);
+      return { scores: [4] };
+    });
+    const recommended = await recommendSkills(
+      principal,
+      { task: "Quality workflow" },
+      undefined,
+      rank,
+    );
+    expect(recommended.items.map((s) => s.id)).toEqual([openId]);
+
+    const ownerWeb = await search({
+      ...ADMIN,
+      context: { source: "web", harness: "cursor" },
+    });
+    expect(ownerWeb.items.map((s) => s.id)).toContain(claudeId);
+    expect(ownerWeb.compatibility).toBeUndefined();
+
+    await expect(
+      publish(
+        ADMIN,
+        claudeId,
+        skill(claudeId, 'compatibility: ["not-a-string"]\n'),
+        (await revisionFor(ADMIN, claudeId)).id,
+      ),
+    ).rejects.toMatchObject({ status: 400 });
+  } finally {
+    await db.delete(clients).where(eq(clients.id, c.id));
+    await db.delete(profiles).where(eq(profiles.id, profile.id));
+  }
+});
+
+test("profile default harness applies only when the live header is absent", async () => {
+  const claudeId = "test-compat-default-" + randomUUID().slice(0, 8);
+  ids.push(claudeId);
+  await publish(
+    ADMIN,
+    claudeId,
+    [
+      makeFile(
+        "SKILL.md",
+        `---\nname: ${claudeId}\ndescription: Quality workflow for a fixture\ncompatibility: Designed for Claude Code\n---\nBody\n`,
+      ),
+    ],
+    null,
+  );
+  const profile = await access.saveProfile(ADMIN, {
+    name: "Default harness " + randomUUID(),
+    allSkills: false,
+    skillIds: [claudeId],
+    permissions: {
+      create: false,
+      update: false,
+      delete: false,
+      propose: false,
+    },
+    defaultHarness: "cursor",
+  });
+  const c = await access.uniqueClient(
+    "Default harness client " + randomUUID(),
+    profile.id,
+  );
+  try {
+    const implied = await authenticate(
+      new Request("http://test/mcp", {
+        headers: { Authorization: "Bearer " + c.token },
+      }),
+    );
+    expect(implied.context?.harness).toBe("cursor");
+    expect((await search(implied)).items.map((s) => s.id)).not.toContain(
+      claudeId,
+    );
+    const headerWins = await authenticate(
+      new Request("http://test/mcp", {
+        headers: {
+          Authorization: "Bearer " + c.token,
+          "X-Skillbox-Harness": "claude-code",
+        },
+      }),
+    );
+    expect(headerWins.context?.harness).toBe("claude-code");
+    expect((await search(headerWins)).items.map((s) => s.id)).toContain(
+      claudeId,
+    );
+  } finally {
+    await db.delete(clients).where(eq(clients.id, c.id));
+    await db.delete(profiles).where(eq(profiles.id, profile.id));
+  }
+});
+
 test("legacy migration preserves key identity and exact grants, and is repeatable", async () => {
   const id = randomUUID(),
     secret = randomUUID(),

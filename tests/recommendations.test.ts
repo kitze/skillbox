@@ -172,6 +172,20 @@ test("catalog limits fall back before evaluation, never rank partial subset", as
   }
   expect(calls).toBe(0);
 });
+test("exactly MAX_CANDIDATES still evaluates after a harness-filtered catalog", async () => {
+  let calls = 0;
+  const recommend = createRecommender(async (_task, candidates) => {
+    calls++;
+    return { scores: candidates.map(() => 4) };
+  });
+  const catalog = Array.from({ length: MAX_CANDIDATES }, (_, i) =>
+    candidate(String(i)),
+  );
+  const result = await recommend(fixture(catalog).deps, { task: "task" });
+  expect(result.method).toBe("jev");
+  expect(result.items.length).toBeGreaterThan(0);
+  expect(calls).toBe(1);
+});
 test("bad scores cannot inject candidates or become cached rankings", async () => {
   for (const scores of [
     [NaN, 4, 4],
