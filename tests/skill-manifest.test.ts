@@ -5,6 +5,7 @@ import {
   parseSkillResourceUri,
   skillResourceUri,
   resourceContent,
+  decodeTextContent,
   verifiedFileBytes,
 } from "../src/skill-manifest";
 import type { SkillFile } from "../src/shared";
@@ -152,4 +153,20 @@ test("resource reads preserve UTF-8 and binary bytes and fail on tampering", () 
     { ...f, sha256: "0".repeat(64) },
   ]);
   expect(corrupted.compatible).toBe(false);
+});
+
+test("text-only decoding rejects malformed UTF-8 and NUL content", () => {
+  const valid = Buffer.from("valid 🌋 text");
+  expect(decodeTextContent(valid)).toBe("valid 🌋 text");
+  expect(decodeTextContent(Buffer.from([0xff, 0x61]))).toBeNull();
+  expect(decodeTextContent(Buffer.from([0x61, 0x00, 0x62]))).toBeNull();
+
+  const invalid = file("refs/invalid.txt", Buffer.from([0xff, 0x61]));
+  const content = resourceContent(
+    skillResourceUri(uuid, "example", invalid.path),
+    invalid,
+  );
+  expect("blob" in content ? Buffer.from(content.blob!, "base64") : null).toEqual(
+    Buffer.from([0xff, 0x61]),
+  );
 });
