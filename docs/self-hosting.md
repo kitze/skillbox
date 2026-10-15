@@ -66,7 +66,7 @@ This pulls and starts without a local build. The helper refuses the local-only d
 
 For custom Docker, Kubernetes or secret-manager deployments, the server accepts `SKILLBOX_ADMIN_TOKEN_FILE` and `DATABASE_URL_FILE`. Mount those files read-only, set the `_FILE` variables, and omit their non-file equivalents. Supplying both forms is rejected. Grant the container's unprivileged UID 1000 read access through your secret manager or file ownership/ACLs; do not make secrets broadly readable. Files must be nonempty and at most 4 KiB; values and paths are not included in load errors. The stock Compose setup uses the protected `.env` instead.
 
-This is for startup database/owner secrets. TypeSafe AI and Vercel Gateway keys still belong in Settings, separately for each provider, never in an image or global deployment key.
+This is for startup database/owner secrets. OpenRouter, TypeSafe AI, and Vercel AI Gateway keys still belong in Settings, separately for each provider, never in an image or global deployment key.
 
 ## Back up, recover and upgrade
 
