@@ -5,6 +5,7 @@ import {
 } from "../skill-references";
 import { packageMetrics } from "../package-metrics";
 import { parseSkillIcon, type SkillIcon } from "../skill-icons";
+import { decodeTextContent } from "../skill-manifest";
 import { createHash, randomUUID } from "node:crypto";
 import matter from "gray-matter";
 import { and, eq, desc, inArray, sql } from "drizzle-orm";
@@ -464,15 +465,16 @@ export async function readFile(
   if (f.size > 160_000)
     throw new Problem(413, "File exceeds inline limit; fetch the bundle");
   const bytes = Buffer.from(f.content, "base64");
-  if (bytes.includes(0))
-    throw new Problem(415, "Binary file; fetch the bundle");
+  const text = decodeTextContent(bytes);
+  if (text === null)
+    throw new Problem(415, "Binary or invalid UTF-8 file; fetch the bundle");
   await record(p, "read_file", id, { revision: r.id, path });
   return {
     id,
     revision: r.id,
     path,
-    text: bytes.toString("utf8"),
-    ...(await referenceDetails(p, bytes.toString("utf8"))),
+    text,
+    ...(await referenceDetails(p, text)),
     sha256: f.sha256,
   };
 }

@@ -230,7 +230,7 @@ export function createMcp(
     "read_skill_file",
     {
       description:
-        "Read a specific reference or script from the exact loaded skill revision. Text files only, up to 160 KB. For binary or larger files use skillbox fetch on the machine that needs them.",
+        "Read a specific reference or script from the exact loaded skill revision. UTF-8 text files only, up to 160 KB. For binary, non-UTF-8 or larger files use skillbox fetch on the machine that needs them.",
       inputSchema: z.object({
         id: z.string(),
         revision: z.string(),

@@ -75,13 +75,21 @@ export async function materialize(bundle, root) {
     try {
       await rename(tmp, target);
     } catch (e) {
-      if (e.code === "ENOTEMPTY" || e.code === "EEXIST") {
-        /* Never trust an existing mutable cache directory: return this freshly verified copy. */ const fresh =
-          target + "-" + randomUUID();
-        await rename(tmp, fresh);
-        return fresh;
+      const collision = e.code === "ENOTEMPTY" || e.code === "EEXIST";
+      let targetExists = false;
+      if (e.code === "EPERM") {
+        try {
+          await lstat(target);
+          targetExists = true;
+        } catch {
+          // EPERM without an existing target is a real rename failure.
+        }
       }
-      throw e;
+      if (!collision && !targetExists) throw e;
+      /* Never trust an existing mutable cache directory: return this freshly verified copy. */ const fresh =
+        target + "-" + randomUUID();
+      await rename(tmp, fresh);
+      return fresh;
     }
     return target;
   } finally {

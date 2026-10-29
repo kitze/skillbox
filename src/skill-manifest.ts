@@ -291,24 +291,31 @@ export function mimeTypeForPath(path: string) {
   );
 }
 
-export function resourceContent(uri: string, file: SkillFile) {
-  const bytes = verifiedFileBytes(file);
+export function decodeTextContent(bytes: Uint8Array): string | null {
   try {
     const text = new TextDecoder("utf-8", {
       fatal: true,
       ignoreBOM: true,
     }).decode(bytes);
-    if (text.includes("\0")) throw new Error("Binary content");
+    return text.includes("\0") ? null : text;
+  } catch {
+    return null;
+  }
+}
+
+export function resourceContent(uri: string, file: SkillFile) {
+  const bytes = verifiedFileBytes(file);
+  const text = decodeTextContent(bytes);
+  if (text !== null) {
     return {
       uri,
       mimeType: mimeTypeForPath(file.path),
       text,
     };
-  } catch {
-    return {
-      uri,
-      mimeType: mimeTypeForPath(file.path),
-      blob: bytes.toString("base64"),
-    };
   }
+  return {
+    uri,
+    mimeType: mimeTypeForPath(file.path),
+    blob: bytes.toString("base64"),
+  };
 }
