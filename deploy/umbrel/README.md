@@ -61,7 +61,7 @@ Publish the actual `public/app-icon.svg` as an accessible asset. Gallery screens
 - `app_proxy` stays enabled for the UI. Only `/api/*`, `/mcp`, `/cli/*` and `/bootstrap/*` bypass **Umbrel proxy** auth so bearer-token clients and installers work. Skillbox still enforces its own authentication on protected API/MCP routes; login and static bootstrap/CLI files remain intentionally public.
 - `APP_PASSWORD` becomes the Skillbox owner login key, surfaced by Umbrel's app-password UI through `deterministicPassword: true`. It is not logged, hardcoded or used as a provider API key.
 - PostgreSQL gets a separate deterministic, purpose-specific secret from `derive_entropy`, scoped using `EXPORTS_APP_ID`. It is not regenerated on restart/update.
-- No provider key is supplied by the package. Select TypeSafe AI or Vercel AI Gateway and add its own key in Skillbox Settings if you want Jev.
+- No provider key is supplied by the package. Select OpenRouter, TypeSafe AI, or Vercel AI Gateway and add its own key in Skillbox Settings if you want Jev.
 - Canonical browser origin uses `http://${DEVICE_DOMAIN_NAME}:${APP_PROXY_PORT}`. Use the Umbrel launch hostname. Custom IP, Tor or HTTPS ingress origins require deliberate app configuration; the package does not wildcard CSRF origins.
 - App state and PostgreSQL live under `${APP_DATA_DIR}/data/...`. No database port, Docker socket, host network or special Umbrel permissions are exposed.
 - Internal service hostnames include the app ID so a shared Umbrel network cannot accidentally resolve another app's database alias.

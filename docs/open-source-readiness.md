@@ -5,7 +5,7 @@
 - MIT license is included.
 - New databases start empty: no skills, client credentials, provider keys or external MCP endpoint is seeded.
 - Defaults target localhost. Browser-origin aliases and cross-origin OAuth compatibility are explicit deployment configuration, empty by default.
-- Optional Jev requires an owner-saved TypeSafe AI or Vercel AI Gateway key in Settings, with separate credentials per provider. Optional Executor requires an owner-configured endpoint and authentication.
+- Optional Jev requires an owner-saved OpenRouter, TypeSafe AI, or Vercel AI Gateway key in Settings, with separate credentials per provider. Optional Executor requires an owner-configured endpoint and authentication.
 - Saved integration secrets use authenticated encryption and are never returned by status APIs.
 - The setup helper generates unique credentials, writes mode 0600, prints no values and refuses to overwrite an existing environment.
 - Docker build inputs are allowlisted. Local data, backups, environment files, agent logs and operational notes are excluded from build stages and the final image.
