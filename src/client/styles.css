@@ -502,6 +502,10 @@ small {
   margin-top: 7px;
   line-height: 1.5;
 }
+.skill-description .harness-badge {
+  display: block;
+  margin-top: 3px;
+}
 .github-import-page {
   max-width: 980px;
 }
@@ -558,6 +562,14 @@ small {
   background: #232b1e;
   padding: 4px 7px;
   white-space: nowrap;
+}
+.harness-badge {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 .skill-row > .tag {
   width: 95px;

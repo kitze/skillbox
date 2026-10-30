@@ -1,5 +1,61 @@
 import type { SkillIcon } from "./skill-icons";
 export type JevProvider = "vercel" | "typesafe" | "openrouter";
+export type HarnessPolicy = {
+  mode: "any" | "products";
+  products: string[];
+};
+export type CompatibilityFilter = {
+  harness: string;
+  filtered: boolean;
+  skipped: number;
+  skippedIds?: string[];
+};
+export const HARNESS_SUGGESTIONS = [
+  "cursor",
+  "claude-code",
+  "claude",
+  "claude-desktop",
+  "anthropic",
+  "codex",
+  "openai",
+  "chatgpt",
+  "vscode",
+  "copilot",
+  "gemini",
+  "gemini-cli",
+  "windsurf",
+] as const;
+const HARNESS_LABELS: Record<string, string> = {
+  "claude-code": "Claude Code",
+  claude: "Claude Code",
+  "claude-desktop": "Claude Code",
+  anthropic: "Claude Code",
+  cursor: "Cursor",
+  codex: "Codex",
+  openai: "Codex",
+  chatgpt: "Codex",
+  vscode: "VS Code",
+  copilot: "VS Code",
+  "github-copilot": "VS Code",
+  gemini: "Gemini",
+  "gemini-cli": "Gemini",
+  windsurf: "Windsurf",
+};
+export function harnessBadgeLabel(
+  policy?: HarnessPolicy | null,
+): string | null {
+  if (!policy || policy.mode !== "products" || !policy.products.length)
+    return null;
+  const labels: string[] = [];
+  const seen = new Set<string>();
+  for (const product of policy.products) {
+    const label = HARNESS_LABELS[product] ?? product;
+    if (seen.has(label)) continue;
+    seen.add(label);
+    labels.push(label);
+  }
+  return labels.join(" · ");
+}
 export type GitHubSource = {
   type: "github";
   repository: string;
@@ -45,10 +101,13 @@ export type SkillMetadata = {
   tags: string[];
   requirements: Record<string, unknown>;
   frontmatter: Record<string, unknown>;
+  compatibility?: string;
+  harnessPolicy?: HarnessPolicy;
 };
 export type AccessContext = {
   source?: string;
   harness?: string;
+  clientHarness?: string;
   model?: string;
   task?: string;
   purpose?: string;
@@ -97,4 +156,6 @@ export type SkillSummary = {
   tags: string[];
   revision: string;
   updatedAt: string;
+  compatibility?: string;
+  harnessPolicy?: HarnessPolicy;
 };
