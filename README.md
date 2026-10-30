@@ -1,3 +1,238 @@
+<!-- readme-sync:repo:start -->
+# skillbox
+
+Self\-hosted, versioned skills library for AI agents\. MCP, scoped clients, and optional Jev recommendations\.
+<!-- readme-sync:repo:end -->
+
+<!-- readme-sync:header:start -->
+<p>
+  <a href="https://kitze.io/?ref=kitze%2Fskillbox"><img src="https://unavatar.io/x/thekitze" align="left" hspace="12" width="64" height="64" alt="Kitze"></a>
+  <strong>Made by <a href="https://kitze.io/?ref=kitze%2Fskillbox">Kitze</a></strong><br>
+  <a href="https://kitze.io/?ref=kitze%2Fskillbox">kitze.io</a> · <a href="https://x.com/thekitze?ref=kitze%2Fskillbox">X</a> · <a href="https://youtube.com/kitze?ref=kitze%2Fskillbox">YouTube</a>
+</p>
+<br clear="all">
+
+
+<h3>More projects by Kitze</h3>
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <a href="https://pwn.watch/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/projects/kitze/pwn-watch.png" width="48" height="48" alt="pwn.watch logo"></a><br>
+      <strong><a href="https://pwn.watch/?ref=kitze%2Fskillbox">pwn.watch</a></strong><br>
+      Live security incidents: CVEs, patch status, fixed versions and advisories.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://flavors.design/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/projects/kitze/flavors.png" width="48" height="48" alt="flavors.design logo"></a><br>
+      <strong><a href="https://flavors.design/?ref=kitze%2Fskillbox">flavors.design</a></strong><br>
+      Copy-pasteable design flavors. Pick a vibe, hand the markdown to your agent.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://gifs.so/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/projects/kitze/gifs-so.png" width="48" height="48" alt="gifs.so logo"></a><br>
+      <strong><a href="https://gifs.so/?ref=kitze%2Fskillbox">gifs.so</a></strong><br>
+      Search, copy, and download reaction GIFs.
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <a href="https://shipper.so/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/projects/kitze/shipper.png" width="48" height="48" alt="Shipper logo"></a><br>
+      <strong><a href="https://shipper.so/?ref=kitze%2Fskillbox">Shipper</a></strong><br>
+      Changelog, roadmap, feature requests and tasks for every product you ship.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://kanso.so/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/projects/kitze/kanso.png" width="48" height="48" alt="Kanso logo"></a><br>
+      <strong><a href="https://kanso.so/?ref=kitze%2Fskillbox">Kanso</a></strong><br>
+      One keyboard-first app for your todos, habits, routines, planner and saved stuff.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://healthmaxx.app/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/projects/kitze/healthmaxx.png" width="48" height="48" alt="HealthMaxx logo"></a><br>
+      <strong><a href="https://healthmaxx.app/?ref=kitze%2Fskillbox">HealthMaxx</a></strong><br>
+      One health log for everything you track: by hand, from wearables, or through your AI.
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <a href="https://zerotoshipped.com/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/projects/kitze/zero-to-shipped.png" width="48" height="48" alt="Zero To Shipped logo"></a><br>
+      <strong><a href="https://zerotoshipped.com/?ref=kitze%2Fskillbox">Zero To Shipped</a></strong><br>
+      A full-stack starter kit for web and mobile apps.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://sotto.to/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/projects/kitze/sotto.png" width="48" height="48" alt="Sotto logo"></a><br>
+      <strong><a href="https://sotto.to/?ref=kitze%2Fskillbox">Sotto</a></strong><br>
+      Voice-to-text for macOS. Local AI, one-time purchase.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://tinkerer.club/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/projects/kitze/tinkerer-club.png" width="48" height="48" alt="Tinkerer Club logo"></a><br>
+      <strong><a href="https://tinkerer.club/?ref=kitze%2Fskillbox">Tinkerer Club</a></strong><br>
+      A private community for builders, self-hosters, and AI tinkerers.
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <a href="https://sizzy.co/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/projects/kitze/sizzy.png" width="48" height="48" alt="Sizzy logo"></a><br>
+      <strong><a href="https://sizzy.co/?ref=kitze%2Fskillbox">Sizzy</a></strong><br>
+      The browser for web developers.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://supermac.io/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/projects/kitze/supermac.png" width="48" height="48" alt="Supermac logo"></a><br>
+      <strong><a href="https://supermac.io/?ref=kitze%2Fskillbox">Supermac</a></strong><br>
+      A macOS command center for everyday workflows.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://dmx.to/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/projects/kitze/dmx.png" width="48" height="48" alt="DMX logo"></a><br>
+      <strong><a href="https://dmx.to/?ref=kitze%2Fskillbox">DMX</a></strong><br>
+      A focused desktop client for X.
+    </td>
+  </tr>
+</table>
+
+<h3>Support this project</h3>
+<p>
+  <a href="https://buymeacoffee.com/kitze?ref=kitze%2Fskillbox"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" width="143" height="40" alt="Buy me a coffee"></a>
+  &nbsp;
+  <a href="https://github.com/sponsors/kitze?ref=kitze%2Fskillbox"><img src="https://img.shields.io/badge/GitHub_Sponsors-EA4AAA?style=for-the-badge&amp;logo=githubsponsors&amp;logoColor=white" width="246" height="40" alt="Sponsor on GitHub"></a>
+</p>
+
+<h3>Sponsors</h3>
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <a href="https://matte.app/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/4193d8ef8f8b0660107703fe/66b20a60c4d9e1da3d999efe862e86f600ebb5a4ffa3a8b63f40a507fef91f66.webp" width="40" alt="Matte logo"></a><br>
+      <strong><a href="https://matte.app/?ref=kitze%2Fskillbox">Matte</a></strong><br>
+      3D mockups and screen recordings with pro-level video editing
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://postiz.com/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/50b4a915f9c47b5328b97281/b08730d86b240100fd72d42b828923856d14d82d50eb5698b99cf8e2ca125288.webp" width="40" alt="Postiz logo"></a><br>
+      <strong><a href="https://postiz.com/?ref=kitze%2Fskillbox">Postiz</a></strong><br>
+      Agentic social scheduler for GIFs!
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://screenshotone.com/?ref=kitze%2Fskillbox"><img src="https://screenshotone.com/logo.png" width="40" alt="ScreenshotOne logo"></a><br>
+      <strong><a href="https://screenshotone.com/?ref=kitze%2Fskillbox">ScreenshotOne</a></strong><br>
+      The best screenshot API for developers and agents
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <a href="https://www.ether.fi/ai-connector?utm_source=kitze&amp;utm_medium=sponsorship&amp;utm_campaign=ai_connector&amp;utm_content=sponsor_slot&amp;ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/etherfi.png" width="40" alt="ether.fi logo"></a><br>
+      <strong><a href="https://www.ether.fi/ai-connector?utm_source=kitze&amp;utm_medium=sponsorship&amp;utm_campaign=ai_connector&amp;utm_content=sponsor_slot&amp;ref=kitze%2Fskillbox">ether.fi</a></strong><br>
+      a neobank with a built in ai-connector, build your own frontend to your finance with claude, chatgpt or your LLM of choice! Feedback always welcome!
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://openprose.ai/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/openprose.png" width="40" alt="OpenProse logo"></a><br>
+      <strong><a href="https://openprose.ai/?ref=kitze%2Fskillbox">OpenProse</a></strong><br>
+      Reliable, event-driven multiagent workflows — in Markdown.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://opentweet.io/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/opentweet.png" width="40" alt="OpenTweet logo"></a><br>
+      <strong><a href="https://opentweet.io/?ref=kitze%2Fskillbox">OpenTweet</a></strong><br>
+      Agentic X (Twitter) autopilot.
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <a href="https://appsumo.com/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/appsumo.png" width="40" alt="AppSumo logo"></a><br>
+      <strong><a href="https://appsumo.com/?ref=kitze%2Fskillbox">AppSumo</a></strong><br>
+      1M+ entrepreneurs use AppSumo to find the best deals on software for their business. One-time payments, lifetime access.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://teamspartan.io/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/team-spartan.png" width="40" alt="Team Spartan by CONFLICT logo"></a><br>
+      <strong><a href="https://teamspartan.io/?ref=kitze%2Fskillbox">Team Spartan by CONFLICT</a></strong><br>
+      Know what matters. Get it fixed. Experience spans high-traffic consumer platforms, cloud infrastructure, and security — built under real operational pressure.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://browserless.io/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/browserless.png" width="40" alt="Browserless.io logo"></a><br>
+      <strong><a href="https://browserless.io/?ref=kitze%2Fskillbox">Browserless.io</a></strong><br>
+      The web layer your agent runs on.
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <a href="https://www.strix.ai/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/strix.png" width="40" alt="Strix logo"></a><br>
+      <strong><a href="https://www.strix.ai/?ref=kitze%2Fskillbox">Strix</a></strong><br>
+      Hack yourself before the bad guys do. Open source (70k+ stars on Github)
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://maplevc.com/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/maple-vc.jpg" width="40" alt="Maple VC logo"></a><br>
+      <strong><a href="https://maplevc.com/?ref=kitze%2Fskillbox">Maple VC</a></strong><br>
+      We&#39;re 3 operators (digitalocean, uber, shopify) turned investors who write first checks into folks with ambition to build global businesses.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://www.rakazo.com/?ref=kitze%2Fskillbox"><img src="https://rakazo.com/brand/rakazo-mark.png" width="40" alt="Rakazo logo"></a><br>
+      <strong><a href="https://www.rakazo.com/?ref=kitze%2Fskillbox">Rakazo</a></strong><br>
+      Open source Grok Bot
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <a href="https://www.theinfluencer.ai/?ref=kitze%2Fskillbox"><img src="https://www.theinfluencer.ai/logos/the-influencer-ai-logo-1024.png" width="40" alt="The Influencer AI logo"></a><br>
+      <strong><a href="https://www.theinfluencer.ai/?ref=kitze%2Fskillbox">The Influencer AI</a></strong><br>
+      AI influencer generator: create a realistic influencer from traits or your photos, then make photos, talking videos and UGC ads with the same face every time.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://pluginboard.ai/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/pluginboard.png" width="40" alt="Pluginboard logo"></a><br>
+      <strong><a href="https://pluginboard.ai/?ref=kitze%2Fskillbox">Pluginboard</a></strong><br>
+      Find the right plugins for your AI agents. Plugins, skills and step-by-step recipes for Claude, ChatGPT, Grokbot, Muse, Gemini and more.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://file.cafe/?ref=kitze%2Fskillbox"><img src="https://file.cafe/brand/icon-512.png" width="40" alt="file.cafe logo"></a><br>
+      <strong><a href="https://file.cafe/?ref=kitze%2Fskillbox">file.cafe</a></strong><br>
+      Free, instant file sharing.
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <a href="https://linkdr.com/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/linkdr.png" width="40" alt="LinkDR logo"></a><br>
+      <strong><a href="https://linkdr.com/?ref=kitze%2Fskillbox">LinkDR</a></strong><br>
+      Link building that works: real backlinks from hundreds of high-DR sites, done for you or self-serve.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://outmano.com/?ref=kitze%2Fskillbox"><img src="https://outmano.com/icon-512.png" width="40" alt="Outmano logo"></a><br>
+      <strong><a href="https://outmano.com/?ref=kitze%2Fskillbox">Outmano</a></strong><br>
+      AI agents that watch your competitors so you don&#39;t have to
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://mixpost.app/?utm_source=kitze&amp;utm_medium=sponsor&amp;utm_campaign=kitze-sponsor&amp;ref=kitze%2Fskillbox"><img src="https://mixpost.s3.eu-central-1.amazonaws.com/remote-access/logo-symbol.png" width="40" alt="Mixpost logo"></a><br>
+      <strong><a href="https://mixpost.app/?utm_source=kitze&amp;utm_medium=sponsor&amp;utm_campaign=kitze-sponsor&amp;ref=kitze%2Fskillbox">Mixpost</a></strong><br>
+      Self-hosted social media scheduler. Pay once.
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <a href="https://synteq.com/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/synteq.png" width="40" alt="Synteq logo"></a><br>
+      <strong><a href="https://synteq.com/?ref=kitze%2Fskillbox">Synteq</a></strong><br>
+      The cloud, built for developers.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://kraken.io/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/kraken-io.png" width="40" alt="Kraken.io logo"></a><br>
+      <strong><a href="https://kraken.io/?ref=kitze%2Fskillbox">Kraken.io</a></strong><br>
+      We optimize your images, to save you bandwidth, make your websites faster, make your customers less frustrated, and reduce your CDN costs.
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://www.opensourcealternatives.to/?ref=kitze%2Fskillbox"><img src="https://www.opensourcealternatives.to/logo.png" width="40" alt="Open Source Alternatives logo"></a><br>
+      <strong><a href="https://www.opensourcealternatives.to/?ref=kitze%2Fskillbox">Open Source Alternatives</a></strong><br>
+      Best Open Source Alternatives to Paid Software. Type anything and It answers with the right open source alternatives.
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <a href="https://watasu.io/?utm_source=pwnwatch&amp;utm_medium=sponsor&amp;utm_campaign=sidebar&amp;ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/watasu.png" width="40" alt="WATASU logo"></a><br>
+      <strong><a href="https://watasu.io/?utm_source=pwnwatch&amp;utm_medium=sponsor&amp;utm_campaign=sidebar&amp;ref=kitze%2Fskillbox">WATASU</a></strong><br>
+      Hosting for your vibe-coded app
+    </td>
+    <td width="67%" colspan="2" valign="top">
+      <strong><a href="https://www.kitze.io/sponsors?ref=kitze%2Fskillbox">Your product here</a></strong><br>
+      Reach developers in every kitze repo.
+    </td>
+  </tr>
+</table>
+
+<br>
+
+<hr>
+
+<br>
+<!-- readme-sync:header:end -->
+
 # Skillbox
 
 A self-hosted, versioned skills library for AI agents. React, Bun, Hono and PostgreSQL. MIT licensed.
@@ -8,8 +243,10 @@ A self-hosted, versioned skills library for AI agents. React, Bun, Hono and Post
 - Profiles with skill/bundle grants and independent create, update, archive and proposal permissions.
 - Revocable client keys, usage reporting and owner-reviewed updates.
 - HTTP MCP, a Node/Bun stdio bridge and checksum-verified CLI downloads.
-- Optional task-aware Jev recommendations using **your own TypeSafe AI or Vercel AI Gateway key**.
+- Base MCP Resources, standards-shaped skill manifests and a non-mutating compatibility audit.
+- Optional task-aware Jev recommendations using **your own OpenRouter, TypeSafe AI or Vercel AI Gateway key**.
 - Optional Executor integration using **your own endpoint and authentication**.
+- Public GitHub URL imports with commit-pinned previews and revision conflict checks.
 - Native folder imports/exports, protected PostgreSQL/config backups and explicit restore tooling.
 - Docker-only setup, optional Caddy HTTPS and Umbrel package generation.
 
@@ -45,13 +282,13 @@ bun run start
 
 ## Jev setup
 
-Open **Settings → Jev recommendations**, select **Vercel AI Gateway** (default) or **TypeSafe AI**, and save that provider's API key. Keys are stored separately: selecting TypeSafe never sends your Gateway key to TypeSafe, and switching back retains your saved Gateway key. Removing the selected provider's key disables its model calls. Skillbox does not auto-import environment keys, fetch credentials from a skill library, or ship an application-wide provider account.
+Open **Settings → Jev recommendations**, select **Vercel AI Gateway** (default), **TypeSafe AI**, or **OpenRouter**, and save that provider's API key. Keys are stored separately: switching providers never sends another provider's key, and switching back retains its saved key. Removing the selected provider's key disables its model calls. Skillbox does not auto-import environment keys, fetch credentials from a skill library, or ship an application-wide provider account.
 
 The key is encrypted server-side in PostgreSQL using AES-256-GCM with key material derived from your `SKILLBOX_ADMIN_TOKEN`. It is never returned by the settings API or included in browser bundles. Protect the owner token and database backups. Changing that token makes stored integration credentials unreadable. Follow the [rotation guidance](docs/deployment.md) before changing it.
 
 Saving a key does not validate provider access or buy credits. Jev sends task text and authorized active skill descriptions to the selected provider; its charges and data handling apply to your account. Without that provider's saved key, or on failure, recommendations return deterministic search with an explicit fallback reason and attempted `provider`.
 
-TypeSafe uses `POST https://api.typesafe.ai/v1/systemone`, Bearer authentication and `model: "jev-latest"`, without Gateway protocol headers. Gateway keeps its evaluation-model endpoint and existing headers. Both use the same bounded catalog and score rubric; TypeSafe's snake-case usage fields are normalized. Provider/key changes invalidate cached and in-flight results. The direct contract follows the [TypeSafe OpenAPI schema](https://api.typesafe.ai/openapi.json).
+TypeSafe uses `POST https://api.typesafe.ai/v1/systemone`, Bearer authentication and `model: "jev-latest"`, without Gateway protocol headers. Gateway keeps its evaluation-model endpoint and existing headers. OpenRouter uses `POST https://openrouter.ai/api/alpha/decisions` with `model: "typesafe/jev-1.13"`, not the chat-completions endpoint. All three use the same bounded catalog and score rubric. OpenRouter evaluates the complete catalog in batches of at most 32 skills / 24,000 request bytes, with two concurrent batches under the existing eight-second deadline. Any failed batch falls back for the whole request; no partial ranking is returned. Snake-case usage fields are normalized, and OpenRouter's reported `usage.cost` is aggregated across successful batches. Provider/key changes invalidate cached and in-flight results. The direct contract follows the [TypeSafe OpenAPI schema](https://api.typesafe.ai/openapi.json).
 
 ## Agents and CLI
 
@@ -79,6 +316,8 @@ node cli/skillbox.mjs list
 node cli/skillbox.mjs search "database migration"
 node cli/skillbox.mjs recommend "Fix choppy scrolling in an Expo app"
 node cli/skillbox.mjs load my-skill
+node cli/skillbox.mjs manifest my-skill
+node cli/skillbox.mjs audit # Owner-only; exits 1 for incompatible packages
 node cli/skillbox.mjs fetch my-skill@REVISION
 node cli/skillbox.mjs publish ./my-skill my-skill EXPECTED_REVISION
 ```
@@ -91,6 +330,24 @@ Fetching validates every path, file hash, size, executable flag and package chec
 
 `scripts/install-client.py` optionally configures Codex, Claude or Cursor from explicit per-client credentials on stdin, preserving existing settings and making local backups. Review any installer before running it.
 
+## Native MCP Skills
+
+Skillbox serves `io.modelcontextprotocol/skills` on MCP **2026-07-28** using the
+stable SDK v2: `server/discover`, `skills/list`, `skills/get`, and verified
+`resources/read`, including binary files. Catalogs contain complete manifests
+for authorized, active, compatible skills; cache hints remain private.
+
+Existing 2025 clients, tools and CLI workflows keep working. The owner-only
+compatibility audit identifies legacy packages without rewriting them. Reading
+a resource never activates or executes a skill; native hosts own verification
+and approval. Optional directory reads are not advertised.
+
+Manually integrates [Matt Van Horn's PR #2](https://github.com/kitze/skillbox/pull/2)
+with the existing manifest, authorization and validation safeguards. See
+[Skills over MCP](docs/mcp-skills.md) for protocol details and verification scope.
+The [hosted roadmap](docs/hosted-roadmap.md) remains future work; this release is
+single-owner and self-hosted.
+
 ## Recommendation contract
 
 MCP: `recommend_skills({task, limit?, offset?})`. HTTP: `POST /api/skill-recommendations` with the same JSON and authentication.
@@ -102,7 +359,17 @@ MCP: `recommend_skills({task, limit?, offset?})`. HTTP: `POST /api/skill-recomme
 - Process-local cache: task, authenticated scope, catalog descriptions/revisions, provider-settings revision and model/rubric version. Maximum 128 entries, five-minute TTL. Two concurrent evaluations; ten uncached requests per scope/minute. No automatic retries.
 - Grants, lifecycle and revisions are checked before model calls and re-read afterward, including cache hits. Key replacement/removal resets model/cache state. Stale results are discarded. Tasks and descriptions are evidence, not executable instructions.
 
-For an optional **billable developer benchmark**, use `bun scripts/benchmark-recommendations.ts --live --provider vercel` with your own `AI_GATEWAY_API_KEY`, or `--provider typesafe` with `TYPESAFE_API_KEY` / `JEV_KEY`. This separate script does not configure the app or save credentials. Missing provider-reported cost is shown as unknown, not zero. Its small synthetic sample is not a production latency SLA or probability calibration.
+For an optional **billable developer benchmark**, use `bun scripts/benchmark-recommendations.ts --live --provider vercel` with your own `AI_GATEWAY_API_KEY`, `--provider typesafe` with `TYPESAFE_API_KEY` / `JEV_KEY`, or `--provider openrouter` with `OPENROUTER_API_KEY`. This separate script does not configure the app or save credentials. Missing provider-reported cost is shown as unknown, not zero. Its small synthetic sample is not a production latency SLA or probability calibration.
+
+## Import from GitHub
+
+Owners can choose **Import from GitHub** in the library and paste a public repository, `/tree/<ref>/<folder>`, or `/blob/<ref>/…/SKILL.md` URL. Collections prompt for a skill directory. Branches containing slashes resolve longest matching ref first; use a full commit SHA to remove ambiguity.
+
+Preview downloads and validates the package without publishing. Review `SKILL.md`, files, excluded artifacts and the pinned commit, then explicitly import. Existing skill IDs require an overwrite checkbox and **Publish new revision**; stale revisions return a conflict rather than overwrite newer edits. Existing bundles, disabled and archived entries cannot be replaced through import.
+
+Publication downloads the previewed commit again, validates Git blob hashes, and records repository, full commit SHA and directory on the immutable revision. Package bytes and executable flags are preserved; no scripts run. Owner-only endpoints: `POST /api/imports/github/preview` (`url`, optional repository-relative `path`) and `POST /api/imports/github/publish` (`url` from the preview, `id`, `expectedRevision`).
+
+Public repositories only: no GitHub token, private repositories, redirects, symlinks, submodules or Git LFS. Limits: 400 files, 2 MB per file, 8 MB per package, 30-second deadline, two active imports and 12 attempts/minute per instance. Truncated or oversized repository trees fail closed. Runtime artifacts and `.env*` files are excluded; recognizable embedded secrets block import. Secret detection is heuristic, not a guarantee that imported content is safe.
 
 ## Data portability
 
@@ -126,3 +393,75 @@ bash scripts/test-isolated.sh
 The isolated suite creates and removes its own Compose PostgreSQL instance without published ports. It covers authorization, revisions, API/MCP behavior, CLI, encrypted settings and recommendations; image creation also builds the frontend. Never run database tests against production.
 
 See [SECURITY.md](SECURITY.md), [deployment notes](docs/deployment.md), and [release checklist](docs/open-source-readiness.md). Skillbox is a single-owner, self-hosted application with scoped clients—not a public multi-tenant SaaS. No analytics, hosted account, preloaded catalog or automatic paid-provider connection is required.
+
+<!-- readme-sync:footer:start -->
+<hr>
+<h3>More projects by Kitze</h3>
+<h4>Apps &amp; tools</h4>
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <strong><a href="https://perkz.to/?ref=kitze%2Fskillbox">Perkz</a></strong><br>
+      Sell and manage access to private GitHub repositories.
+    </td>
+    <td width="33%" valign="top">
+      <strong><a href="https://justwrite.ink/?ref=kitze%2Fskillbox">JustWrite</a></strong><br>
+      Distraction-free writing sprints for macOS, with time or word-count goals.
+    </td>
+    <td width="33%" valign="top">
+      <strong><a href="https://releaseflow.net/?ref=kitze%2Fskillbox">Releaseflow</a></strong><br>
+      App updates and downloads.
+    </td>
+  </tr>
+  <tr>
+    <td width="100%" colspan="3" valign="top">
+      <strong><a href="https://passlock.to/?ref=kitze%2Fskillbox">Passlock</a></strong><br>
+      A macOS password manager with time locks and unlock challenges.
+    </td>
+  </tr>
+</table>
+
+<h4>Open source</h4>
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <strong><a href="https://github.com/kitze/skillbox?ref=kitze%2Fskillbox">Skillbox</a></strong><br>
+      A self-hosted, versioned skills library for AI agents.
+    </td>
+    <td width="33%" valign="top">
+      <strong><a href="https://github.com/kitze/unclutter?ref=kitze%2Fskillbox">Unclutter</a></strong><br>
+      Remove page clutter with AI-powered, reusable browser rules.
+    </td>
+    <td width="33%" valign="top">
+      <strong><a href="https://github.com/kitze/pagegrade?ref=kitze%2Fskillbox">PageGrade</a></strong><br>
+      Grade page clarity, writing, and on-page SEO.
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <strong><a href="https://github.com/kitze/council?ref=kitze%2Fskillbox">Council</a></strong><br>
+      Let your coding agents deliberate together before making a plan.
+    </td>
+    <td width="33%" valign="top">
+      <strong><a href="https://github.com/kitze/codexmaxx?ref=kitze%2Fskillbox">CodexMaxx</a></strong><br>
+      Manage Codex accounts, usage, and active sessions on macOS.
+    </td>
+    <td width="33%" valign="top">
+      <strong><a href="https://github.com/kitze/react-hanger?ref=kitze%2Fskillbox">React Hanger</a></strong><br>
+      A collection of useful React hooks.
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <strong><a href="https://github.com/kitze/react-genie?ref=kitze%2Fskillbox">React Genie</a></strong><br>
+      Animate React elements as they enter the viewport.
+    </td>
+    <td width="67%" colspan="2" valign="top">
+      <strong><a href="https://github.com/kitze/mobx-router?ref=kitze%2Fskillbox">MobX Router</a></strong><br>
+      A simple router for MobX and React apps.
+    </td>
+  </tr>
+</table>
+
+<p><a href="https://kitze.io/projects?ref=kitze%2Fskillbox">All projects</a> · <a href="https://github.com/kitze?ref=kitze%2Fskillbox">GitHub</a> · <a href="https://x.com/thekitze?ref=kitze%2Fskillbox">Follow on X</a> · <a href="https://youtube.com/kitze?ref=kitze%2Fskillbox">YouTube</a></p>
+<!-- readme-sync:footer:end -->

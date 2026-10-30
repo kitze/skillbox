@@ -1,4 +1,5 @@
 import { packageMetrics } from "../package-metrics";
+import { compatibilityString, declaredHarnesses } from "./compatibility";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./schema";
@@ -13,6 +14,7 @@ export async function migrate() {
   await connection`ALTER TABLE skills ADD COLUMN IF NOT EXISTS disabled boolean NOT NULL DEFAULT false`;
   await connection`ALTER TABLE skills ADD COLUMN IF NOT EXISTS icon jsonb`;
   await connection`CREATE TABLE IF NOT EXISTS revisions (id text PRIMARY KEY,skill_id text NOT NULL REFERENCES skills(id),metadata jsonb NOT NULL,files jsonb NOT NULL,checksum text NOT NULL,message text NOT NULL,author text NOT NULL,created_at timestamptz NOT NULL DEFAULT now())`;
+  await connection`ALTER TABLE revisions ADD COLUMN IF NOT EXISTS source jsonb`;
   await connection`CREATE INDEX IF NOT EXISTS revisions_skill_idx ON revisions(skill_id)`;
   await connection`CREATE INDEX IF NOT EXISTS skills_search_idx ON skills USING gin(to_tsvector('english',search_text))`;
   await connection`CREATE TABLE IF NOT EXISTS clients (id text PRIMARY KEY,name text NOT NULL,token_hash text NOT NULL UNIQUE,role text NOT NULL DEFAULT 'reader',all_skills boolean NOT NULL DEFAULT false,skill_ids jsonb NOT NULL DEFAULT '[]',active boolean NOT NULL DEFAULT true,created_at timestamptz NOT NULL DEFAULT now())`;
@@ -60,5 +62,32 @@ export async function migrate() {
   await connection`CREATE UNIQUE INDEX IF NOT EXISTS skills_reference_id_idx ON skills(reference_id)`;
   await connection`ALTER TABLE skills ADD COLUMN IF NOT EXISTS compatibility text NOT NULL DEFAULT ''`;
   await connection`ALTER TABLE skills ADD COLUMN IF NOT EXISTS harness_policy jsonb NOT NULL DEFAULT '{"mode":"any","products":[]}'::jsonb`;
+  await connection`CREATE INDEX IF NOT EXISTS events_client_connect_idx ON events(client_id, created_at DESC) WHERE operation = 'connect'`;
+  await backfillHarnessPolicy();
   await connection`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS default_harness text`;
+}
+
+// Skills published before the compatibility columns existed keep the column
+// defaults, so derive their policy once from the current revision's frontmatter.
+export async function backfillHarnessPolicy() {
+  const [done] =
+    await connection`SELECT 1 FROM workspace_settings WHERE id='harness_policy_backfill'`;
+  if (done) return;
+  const rows =
+    await connection`SELECT s.id,s.revision,r.metadata->'frontmatter' AS frontmatter FROM skills s JOIN revisions r ON r.id=s.revision WHERE s.compatibility='' AND s.harness_policy->>'mode'='any'`;
+  for (const row of rows) {
+    const frontmatter = row.frontmatter;
+    if (!frontmatter || typeof frontmatter !== "object") continue;
+    let compatibility = "";
+    let policy;
+    try {
+      compatibility = compatibilityString(frontmatter);
+      policy = declaredHarnesses(frontmatter);
+    } catch {
+      continue;
+    }
+    if (!compatibility && policy.mode === "any") continue;
+    await connection`UPDATE skills SET compatibility=${compatibility},harness_policy=${JSON.stringify(policy)}::jsonb WHERE id=${row.id} AND revision=${row.revision}`;
+  }
+  await connection`INSERT INTO workspace_settings(id,value) VALUES ('harness_policy_backfill','true'::jsonb) ON CONFLICT(id) DO NOTHING`;
 }

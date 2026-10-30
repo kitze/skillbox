@@ -506,6 +506,53 @@ small {
   display: block;
   margin-top: 3px;
 }
+.github-import-page {
+  max-width: 980px;
+}
+.github-import-form {
+  margin: 24px 0;
+}
+.github-import-form .filters {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+.github-import-form .filters input {
+  flex: 1;
+  min-width: 0;
+}
+.github-import-preview {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+.github-import-preview > a {
+  overflow-wrap: anywhere;
+}
+.github-import-files {
+  max-height: 280px;
+  overflow: auto;
+}
+.github-import-files table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.github-import-files th,
+.github-import-files td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.github-import-files code {
+  overflow-wrap: anywhere;
+}
+.github-import-instructions {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 420px;
+  overflow: auto;
+  padding: 12px;
+}
 .tag {
   font-size: 9px;
   line-height: 1.2;

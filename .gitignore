@@ -13,3 +13,4 @@ coverage/
 *.bundle
 __pycache__/
 *.pyc
+landing-preview*.html

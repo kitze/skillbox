@@ -101,3 +101,13 @@ test("product tokens do not match inside unrelated words", () => {
     "codex",
   ]);
 });
+
+test("ambiguous compatibility prose fails open", () => {
+  expect(productsFromCompatibility("Not compatible with Cursor")).toEqual([]);
+  expect(productsFromCompatibility("Works everywhere except Codex")).toEqual([]);
+  expect(productsFromCompatibility("Requires an OpenAI API key")).toEqual([]);
+  expect(productsFromCompatibility("Uses Claude models for review")).toEqual([]);
+  expect(productsFromCompatibility("Requires Claude Code and git")).toEqual([
+    "claude-code",
+  ]);
+});

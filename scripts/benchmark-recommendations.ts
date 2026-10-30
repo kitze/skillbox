@@ -6,17 +6,25 @@ if (!process.argv.includes("--live"))
 // This explicit developer benchmark is separate from app Settings; never auto-imports a key.
 const providerIndex = process.argv.indexOf("--provider");
 const provider = providerIndex < 0 ? "vercel" : process.argv[providerIndex + 1];
-if (provider !== "vercel" && provider !== "typesafe")
-  throw new Error("Choose --provider vercel or --provider typesafe");
+if (
+  provider !== "vercel" &&
+  provider !== "typesafe" &&
+  provider !== "openrouter"
+)
+  throw new Error("Choose --provider vercel, typesafe or openrouter");
 const apiKey =
-  provider === "typesafe"
-    ? (process.env.TYPESAFE_API_KEY ?? process.env.JEV_KEY)
-    : process.env.AI_GATEWAY_API_KEY;
+  provider === "openrouter"
+    ? process.env.OPENROUTER_API_KEY
+    : provider === "typesafe"
+      ? (process.env.TYPESAFE_API_KEY ?? process.env.JEV_KEY)
+      : process.env.AI_GATEWAY_API_KEY;
 if (!apiKey)
   throw new Error(
-    provider === "typesafe"
-      ? "TYPESAFE_API_KEY or JEV_KEY is required for this benchmark"
-      : "AI_GATEWAY_API_KEY is required for this benchmark",
+    provider === "openrouter"
+      ? "OPENROUTER_API_KEY is required for this benchmark"
+      : provider === "typesafe"
+        ? "TYPESAFE_API_KEY or JEV_KEY is required for this benchmark"
+        : "AI_GATEWAY_API_KEY is required for this benchmark",
   );
 const observations: Array<{
   task: string;

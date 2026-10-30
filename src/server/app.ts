@@ -10,7 +10,7 @@ import { bodyLimit } from "hono/body-limit";
 import { z } from "zod";
 import { eq, desc, lt, and, sql } from "drizzle-orm";
 import { db } from "./db";
-import { clients, sessions, events, profiles } from "./schema";
+import { clients, sessions, events, profiles, skills } from "./schema";
 import {
   authenticate,
   isAdminToken,
@@ -22,6 +22,12 @@ import * as lib from "./library";
 import { handleMcp, fileSchema } from "./mcp";
 import type { Principal } from "../shared";
 import { recommendationInput } from "./recommendations";
+import { compatibilityPage, manifestFor } from "./skill-resources";
+import {
+  githubImportInput,
+  parseGitHubUrl,
+  prepareGitHubImport,
+} from "./github-import";
 export const app = new Hono<{ Variables: { principal: Principal } }>();
 const loginAttempts: number[] = [];
 app.use("*", async (c, next) => {
@@ -114,7 +120,11 @@ app.get("/api/settings/ai-gateway", async (c) => {
 });
 app.put("/api/settings/ai-gateway", async (c) => {
   assertAdmin(c.get("principal"));
-  return c.json(await gateway.configureGateway(gateway.gatewayInput.parse(await c.req.json())));
+  return c.json(
+    await gateway.configureGateway(
+      gateway.gatewayInput.parse(await c.req.json()),
+    ),
+  );
 });
 app.get("/api/me", (c) =>
   c.json({ name: c.get("principal").name, role: c.get("principal").role }),
@@ -180,6 +190,93 @@ app.post("/api/skill-recommendations", async (c) => {
     ),
   );
 });
+app.post("/api/imports/github/preview", async (c) => {
+  const principal = c.get("principal");
+  assertAdmin(principal);
+  const prepared = await prepareGitHubImport(
+    githubImportInput.parse(await c.req.json()),
+    c.req.raw.signal,
+  );
+  if (prepared.kind === "catalog") return c.json(prepared);
+  const [existing] = await db
+    .select()
+    .from(skills)
+    .where(eq(skills.id, prepared.id));
+  if (
+    existing &&
+    (existing.kind !== "skill" || existing.disabled || existing.archived)
+  )
+    throw new lib.Problem(
+      409,
+      "Existing entry is a bundle, disabled or archived; resolve that before importing",
+    );
+  return c.json({
+    ...prepared,
+    files: prepared.files.map(({ content, ...file }) => file),
+    expectedRevision: existing?.revision ?? null,
+  });
+});
+app.post("/api/imports/github/publish", async (c) => {
+  const principal = c.get("principal");
+  assertAdmin(principal);
+  const input = z
+    .object({
+      url: z.string().max(2048),
+      id: z.string().max(80),
+      expectedRevision: z.string().nullable(),
+    })
+    .strict()
+    .parse(await c.req.json());
+  const target = parseGitHubUrl(input.url);
+  if (
+    target.kind !== "tree" ||
+    !/^[0-9a-f]{40}$/.test(target.segments[0] ?? "")
+  )
+    throw new lib.Problem(
+      400,
+      "Preview first; publishing requires a commit-pinned GitHub URL",
+    );
+  const prepared = await prepareGitHubImport(
+    { url: input.url },
+    c.req.raw.signal,
+  );
+  if (prepared.kind !== "skill" || prepared.id !== input.id)
+    throw new lib.Problem(400, "Preview and imported skill do not match");
+  const [existing] = await db
+    .select()
+    .from(skills)
+    .where(eq(skills.id, prepared.id));
+  if (
+    existing &&
+    (existing.kind !== "skill" || existing.disabled || existing.archived)
+  )
+    throw new lib.Problem(
+      409,
+      "Existing entry is a bundle, disabled or archived; resolve that before importing",
+    );
+  return c.json(
+    await lib.publish(
+      principal,
+      prepared.id,
+      prepared.files,
+      input.expectedRevision,
+      `Import ${prepared.source.repository}@${prepared.source.commit.slice(0, 12)}`,
+      undefined,
+      { source: prepared.source },
+    ),
+  );
+});
+app.get("/api/skill-compatibility", async (c) => {
+  const { offset } = z
+    .object({
+      offset: z.coerce.number().int().min(0).max(99_999_999).default(0),
+    })
+    .parse(c.req.query());
+  return c.json(await compatibilityPage(c.get("principal"), offset));
+});
+app.get("/api/skills/:id/manifest", async (c) =>
+  c.json(await manifestFor(c.get("principal"), c.req.param("id"))),
+);
 app.get("/api/skill-references/:referenceId", async (c) =>
   c.json(
     await lib.resolveSkillReference(
@@ -289,6 +386,8 @@ app.post("/api/skills/:id/restore", async (c) => {
       r.files,
       body.expectedRevision,
       "Restore " + r.id.slice(0, 8),
+      undefined,
+      { source: r.source ?? undefined },
     ),
   );
 });

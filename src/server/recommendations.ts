@@ -54,7 +54,8 @@ export class EvaluationUnavailable extends Error {
       | "rate_limited"
       | "unavailable"
       | "authentication_failed"
-      | "invalid_response",
+      | "invalid_response"
+      | "catalog_limit",
     public retryAfterMs = 0,
   ) {
     super(reason);
@@ -62,11 +63,14 @@ export class EvaluationUnavailable extends Error {
 }
 const answerSchema = z.object({
   answers: z.record(
+    z.string(),
     z.object({
       type: z.literal("score"),
       score: z.number().finite().min(0).max(4),
       confidence: z.number().finite().min(0).max(1).optional(),
-      probabilities: z.record(z.number().finite().min(0).max(1)).optional(),
+      probabilities: z
+        .record(z.string(), z.number().finite().min(0).max(1))
+        .optional(),
     }),
   ),
   usage: z
@@ -74,15 +78,18 @@ const answerSchema = z.object({
       z.object({
         inputTokens: z.number().finite().nonnegative(),
         outputTokens: z.number().finite().nonnegative(),
+        cost: z.number().finite().nonnegative().optional(),
       }),
       z
         .object({
           input_tokens: z.number().int().nonnegative(),
           output_tokens: z.number().int().nonnegative(),
+          cost: z.number().finite().nonnegative().optional(),
         })
         .transform((value) => ({
           inputTokens: value.input_tokens,
           outputTokens: value.output_tokens,
+          cost: value.cost,
         })),
     ])
     .optional(),
@@ -112,7 +119,7 @@ export function evaluationRequest(task: string, candidates: Candidate[]) {
     ),
   };
 }
-export const evaluateJev = async (
+const evaluateBatch = async (
   task: string,
   candidates: Candidate[],
   signal: AbortSignal,
@@ -120,14 +127,20 @@ export const evaluateJev = async (
   provider: JevProvider = "vercel",
 ): Promise<Evaluation> => {
   if (!key) throw new EvaluationUnavailable("not_configured");
-  if (provider !== "vercel" && provider !== "typesafe")
+  if (
+    provider !== "vercel" &&
+    provider !== "typesafe" &&
+    provider !== "openrouter"
+  )
     throw new EvaluationUnavailable("unavailable");
-  const direct = provider === "typesafe";
+  const direct = provider !== "vercel";
   const request = evaluationRequest(task, candidates);
   const response = await fetch(
-    direct
-      ? "https://api.typesafe.ai/v1/systemone"
-      : "https://ai-gateway.vercel.sh/v4/ai/evaluation-model",
+    provider === "openrouter"
+      ? "https://openrouter.ai/api/alpha/decisions"
+      : direct
+        ? "https://api.typesafe.ai/v1/systemone"
+        : "https://ai-gateway.vercel.sh/v4/ai/evaluation-model",
     {
       method: "POST",
       redirect: "error",
@@ -144,7 +157,13 @@ export const evaluateJev = async (
           : {}),
       },
       body: JSON.stringify(
-        direct ? { ...request, model: "jev-latest" } : request,
+        direct
+          ? {
+              ...request,
+              model:
+                provider === "openrouter" ? "typesafe/jev-1.13" : "jev-latest",
+            }
+          : request,
       ),
       signal,
     },
@@ -193,8 +212,105 @@ export const evaluateJev = async (
     throw new EvaluationUnavailable("invalid_response");
   return {
     scores,
-    usage: parsed.data.usage,
-    cost: parsed.data.providerMetadata?.gateway?.cost,
+    usage: parsed.data.usage
+      ? {
+          inputTokens: parsed.data.usage.inputTokens,
+          outputTokens: parsed.data.usage.outputTokens,
+        }
+      : undefined,
+    cost:
+      provider === "openrouter" && parsed.data.usage?.cost !== undefined
+        ? String(parsed.data.usage.cost)
+        : parsed.data.providerMetadata?.gateway?.cost,
+  };
+};
+// OpenRouter's decisions model has a smaller context. Evaluate every candidate
+// in bounded batches, never silently truncate the authorized catalog.
+export const OPENROUTER_BATCH_SIZE = 32;
+export const OPENROUTER_BATCH_BYTES = 24_000;
+export const evaluateJev = async (
+  task: string,
+  candidates: Candidate[],
+  signal: AbortSignal,
+  key: string,
+  provider: JevProvider = "vercel",
+): Promise<Evaluation> => {
+  if (provider !== "openrouter")
+    return evaluateBatch(task, candidates, signal, key, provider);
+  if (!key) throw new EvaluationUnavailable("not_configured");
+  const batches: Candidate[][] = [];
+  let current: Candidate[] = [];
+  const bytes = (items: Candidate[]) =>
+    Buffer.byteLength(
+      JSON.stringify({
+        ...evaluationRequest(task, items),
+        model: "typesafe/jev-1.13",
+      }),
+    );
+  for (const candidate of candidates) {
+    if (
+      current.length &&
+      (current.length >= OPENROUTER_BATCH_SIZE ||
+        bytes([...current, candidate]) > OPENROUTER_BATCH_BYTES)
+    ) {
+      batches.push(current);
+      current = [];
+    }
+    current.push(candidate);
+    if (bytes(current) > OPENROUTER_BATCH_BYTES)
+      throw new EvaluationUnavailable("catalog_limit");
+  }
+  if (current.length) batches.push(current);
+  if (!batches.length) return { scores: [] };
+  const controller = new AbortController();
+  const combined = AbortSignal.any([signal, controller.signal]);
+  const results: Evaluation[] = new Array(batches.length);
+  let next = 0;
+  let failure: unknown;
+  try {
+    await Promise.all(
+      Array.from({ length: Math.min(2, batches.length) }, async () => {
+        for (;;) {
+          combined.throwIfAborted();
+          const index = next++;
+          if (index >= batches.length) return;
+          try {
+            results[index] = await evaluateBatch(
+              task,
+              batches[index],
+              combined,
+              key,
+              provider,
+            );
+          } catch (error) {
+            failure ??= error;
+            controller.abort();
+            throw error;
+          }
+        }
+      }),
+    );
+  } catch (error) {
+    controller.abort();
+    throw failure ?? error;
+  }
+  return {
+    scores: results.flatMap((result) => result.scores),
+    usage: results.every((result) => result.usage)
+      ? {
+          inputTokens: results.reduce(
+            (sum, result) => sum + result.usage!.inputTokens,
+            0,
+          ),
+          outputTokens: results.reduce(
+            (sum, result) => sum + result.usage!.outputTokens,
+            0,
+          ),
+        }
+      : undefined,
+    cost: results.every((result) => result.cost !== undefined)
+      ? String(results.reduce((sum, result) => sum + Number(result.cost), 0))
+      : undefined,
   };
 };
 const hash = (value: unknown) =>

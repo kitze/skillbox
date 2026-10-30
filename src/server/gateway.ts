@@ -9,8 +9,8 @@ import {
 } from "./recommendations";
 import type { JevProvider } from "../shared";
 
-const providerSchema = z.enum(["vercel", "typesafe"], {
-  errorMap: () => ({ message: "Choose Vercel AI Gateway or TypeSafe AI" }),
+const providerSchema = z.enum(["vercel", "typesafe", "openrouter"], {
+  error: "Choose Vercel AI Gateway, TypeSafe AI or OpenRouter",
 });
 const configSchema = z
   .object({
@@ -22,13 +22,18 @@ const configSchema = z
       .object({
         vercel: z.string().nullable(),
         typesafe: z.string().nullable(),
+        openrouter: z.string().nullable().default(null),
       })
       .optional(),
   })
   .transform((config) => ({
     revision: config.revision,
     provider: config.provider,
-    keys: config.keys ?? { vercel: config.apiKey ?? null, typesafe: null },
+    keys: config.keys ?? {
+      vercel: config.apiKey ?? null,
+      typesafe: null,
+      openrouter: null,
+    },
   }));
 type Config = z.output<typeof configSchema>;
 export const gatewayInput = z
@@ -54,7 +59,7 @@ function decode(value?: unknown): Config {
     : {
         revision: "unconfigured",
         provider: "vercel",
-        keys: { vercel: null, typesafe: null },
+        keys: { vercel: null, typesafe: null, openrouter: null },
       };
 }
 async function readConfig() {
@@ -69,6 +74,7 @@ function status(config: Config) {
     providers: {
       vercel: { configured: !!config.keys.vercel },
       typesafe: { configured: !!config.keys.typesafe },
+      openrouter: { configured: !!config.keys.openrouter },
     },
     revision: config.revision,
   };

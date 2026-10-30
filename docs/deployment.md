@@ -17,7 +17,7 @@ Generate unique local credentials with `bun scripts/setup-env.ts`, or copy `.env
 | `DATABASE_URL` | Required when running Bun directly with your own database; Compose supplies its internal URL. |
 | `HOST`, `PORT` | Direct Bun bind settings; Compose binds the app internally and publishes only host loopback 4791. |
 
-Jev requires the selected TypeSafe AI or Vercel AI Gateway provider's key saved by the owner in **Settings → Jev recommendations**. Keys are independent; changing providers never transfers a key to another service. No application environment key fallback exists. Executor starts unconfigured; enter your own HTTPS MCP endpoint and authenticate in Settings. Integration keys are encrypted in `workspace_settings`, and status APIs never return them.
+Jev requires the selected OpenRouter, TypeSafe AI or Vercel AI Gateway provider's key saved by the owner in **Settings → Jev recommendations**. Keys are independent; changing providers never transfers a key to another service. No application environment key fallback exists. Executor starts unconfigured; enter your own HTTPS MCP endpoint and authenticate in Settings. Integration keys are encrypted in `workspace_settings`, and status APIs never return them.
 
 If migrating a previously personalized installation, explicitly configure any needed legacy browser origins and Executor resource aliases in your private deployment environment before upgrade. No private aliases are built into source. Existing stored Executor endpoint/credentials, client keys, profiles and revisions are retained; this update does not change them automatically.
 

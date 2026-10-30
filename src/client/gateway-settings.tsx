@@ -7,6 +7,7 @@ import type { JevProvider } from "../shared";
 const names: Record<JevProvider, string> = {
   vercel: "Vercel AI Gateway",
   typesafe: "TypeSafe AI",
+  openrouter: "OpenRouter",
 };
 type Status = { provider: JevProvider; configured: boolean };
 export function GatewaySettings() {
@@ -52,6 +53,7 @@ export function GatewaySettings() {
         >
           <option value="vercel">Vercel AI Gateway</option>
           <option value="typesafe">TypeSafe AI</option>
+          <option value="openrouter">OpenRouter</option>
         </select>
       </label>
       <p>

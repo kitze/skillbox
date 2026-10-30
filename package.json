@@ -17,7 +17,9 @@
   "dependencies": {
     "@fontsource/dm-sans": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
-    "@modelcontextprotocol/sdk": "^1.26.0",
+    "@modelcontextprotocol/core": "2.0.0",
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "@modelcontextprotocol/server": "2.0.0",
     "@radix-ui/react-slot": "^1.2.0",
     "@tanstack/react-router": "^1.130.0",
     "class-variance-authority": "^0.7.1",
@@ -33,9 +35,10 @@
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.3.0",
-    "zod": "^3.25.0"
+    "zod": "^4.2.0"
   },
   "devDependencies": {
+    "@modelcontextprotocol/client": "2.0.0",
     "@tailwindcss/vite": "^4.1.0",
     "@types/bun": "latest",
     "@types/react": "^19.1.0",

@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Skillbox — a self-hosted skills library for AI agents</title>
+  <meta name="description" content="Write a skill once, version it like code, and serve it to every AI agent you run — over MCP, CLI, or HTTP. Self-hosted, open source, MIT licensed." />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta property="og:title" content="Skillbox" />
+  <meta property="og:description" content="A self-hosted, versioned skills library for AI agents. MCP native. MIT licensed." />
+  <meta property="og:image" content="https://skillbox.to/assets/og.jpg" />
+  <meta property="og:url" content="https://skillbox.to" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:creator" content="@thekitze" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #131612;
+      --bg-raise: #1a1e19;
+      --panel: #1d221c;
+      --border: #2c322a;
+      --fg: #e6e9e2;
+      --muted: #99a292;
+      --lime: #c5e694;
+      --lime-dim: #a3c470;
+      --lime-ink: #203015;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "DM Sans", system-ui, sans-serif;
+      font-size: 17px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; height: auto; display: block; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+    /* nav */
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      background: color-mix(in srgb, var(--bg) 82%, transparent);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    }
+    .nav-inner { display: flex; align-items: center; gap: 28px; height: 60px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; letter-spacing: -0.01em; }
+    .brand svg { width: 26px; height: 26px; }
+    .nav-links { display: flex; gap: 22px; margin-left: auto; align-items: center; font-size: 15px; color: var(--muted); }
+    .nav-links a:hover { color: var(--fg); }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--lime); color: var(--lime-ink);
+      font-weight: 700; font-size: 15px;
+      padding: 9px 18px; border-radius: 10px;
+      transition: transform .15s ease, box-shadow .15s ease;
+      box-shadow: 0 0 0 0 rgba(197, 230, 148, 0);
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 24px rgba(197, 230, 148, .25); }
+    .btn.ghost {
+      background: transparent; color: var(--fg);
+      border: 1px solid var(--border);
+    }
+    .btn.ghost:hover { border-color: var(--lime-dim); box-shadow: none; }
+    .btn svg { width: 17px; height: 17px; }
+
+    /* hero */
+    .hero { position: relative; overflow: hidden; }
+    .hero::before {
+      content: ""; position: absolute; inset: 0;
+      background:
+        radial-gradient(700px 420px at 78% 30%, rgba(197,230,148,.10), transparent 65%),
+        radial-gradient(500px 300px at 15% 85%, rgba(197,230,148,.05), transparent 60%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      position: relative;
+      display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px;
+      align-items: center; padding: 72px 0 56px;
+    }
+    .eyebrow {
+      font-family: var(--mono); font-size: 13px; color: var(--lime);
+      letter-spacing: .06em; text-transform: uppercase;
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    }
+    .eyebrow span::after { content: "·"; margin-left: 10px; color: var(--muted); }
+    .eyebrow span:last-child::after { content: ""; }
+    h1 {
+      font-size: clamp(38px, 5.4vw, 60px);
+      line-height: 1.05; font-weight: 900; letter-spacing: -0.03em;
+      margin: 18px 0 20px;
+    }
+    h1 em { font-style: normal; color: var(--lime); }
+    .sub { color: var(--muted); font-size: 19px; max-width: 34em; }
+    .cta { display: flex; gap: 14px; margin-top: 32px; flex-wrap: wrap; }
+    .hero-img { border-radius: 20px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+
+    /* what's a skill strip */
+    .strip {
+      border-block: 1px solid var(--border);
+      background: var(--bg-raise);
+    }
+    .strip-inner {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+      align-items: center; padding: 44px 0;
+    }
+    .strip h2 { font-size: 26px; letter-spacing: -0.02em; margin-bottom: 10px; }
+    .strip p { color: var(--muted); }
+    .skillcard {
+      font-family: var(--mono); font-size: 13.5px; line-height: 1.7;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px 22px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.3);
+      white-space: pre; overflow-x: auto;
+    }
+    .skillcard .c { color: var(--muted); }
+    .skillcard .k { color: var(--lime); }
+
+    /* sections */
+    section.feature { padding: 84px 0 12px; }
+    .feat {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 56px;
+      align-items: center; margin-bottom: 84px;
+    }
+    .feat img { border-radius: 18px; border: 1px solid var(--border); box-shadow: 0 24px 60px rgba(0,0,0,.4); }
+    .feat h2 { font-size: clamp(26px, 3vw, 34px); letter-spacing: -0.02em; margin-bottom: 14px; }
+    .feat p { color: var(--muted); max-width: 30em; }
+    .feat .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+    .chip {
+      font-family: var(--mono); font-size: 12.5px; color: var(--lime);
+      background: color-mix(in srgb, var(--lime) 9%, transparent);
+      border: 1px solid color-mix(in srgb, var(--lime) 25%, transparent);
+      padding: 4px 10px; border-radius: 999px;
+    }
+
+    /* grid */
+    .grid-head { text-align: center; padding-top: 40px; }
+    .grid-head h2 { font-size: clamp(28px, 3.4vw, 38px); letter-spacing: -0.02em; }
+    .grid-head p { color: var(--muted); margin-top: 10px; }
+    .grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;
+      padding: 40px 0 20px;
+    }
+    .card {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px;
+      transition: transform .2s ease, border-color .2s ease;
+    }
+    .card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--lime) 35%, var(--border)); }
+    .card img { width: 76px; height: 76px; border-radius: 14px; margin-bottom: 16px; }
+    .card h3 { font-size: 18px; margin-bottom: 6px; letter-spacing: -0.01em; }
+    .card p { color: var(--muted); font-size: 15px; }
+
+    /* quickstart */
+    .quick { padding: 90px 0; }
+    .quick-inner {
+      display: grid; grid-template-columns: .9fr 1.1fr; gap: 52px; align-items: center;
+      background: var(--bg-raise); border: 1px solid var(--border);
+      border-radius: 24px; padding: 52px;
+      position: relative; overflow: hidden;
+    }
+    .quick-inner::before {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(500px 300px at 85% 15%, rgba(197,230,148,.08), transparent 60%);
+      pointer-events: none;
+    }
+    .quick h2 { font-size: clamp(26px, 3vw, 34px); letter-spacing: -0.02em; margin-bottom: 12px; }
+    .quick p { color: var(--muted); }
+    .term {
+      position: relative;
+      font-family: var(--mono); font-size: 14px; line-height: 1.9;
+      background: #101309; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 14px;
+      padding: 22px 24px; overflow-x: auto;
+      box-shadow: 0 16px 50px rgba(0,0,0,.35);
+    }
+    .term .p { color: var(--lime); user-select: none; }
+    .term .c { color: var(--muted); }
+
+    /* footer */
+    footer { border-top: 1px solid var(--border); padding: 36px 0 48px; }
+    .foot { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; color: var(--muted); font-size: 15px; }
+    .foot a:hover { color: var(--lime); }
+    .foot .spacer { margin-left: auto; display: flex; gap: 20px; }
+
+    /* reveal */
+    .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+      html { scroll-behavior: auto; }
+    }
+
+    @media (max-width: 900px) {
+      .hero-inner, .strip-inner, .feat, .quick-inner { grid-template-columns: 1fr; gap: 32px; }
+      .feat.flip .txt { order: -1; }
+      .grid { grid-template-columns: 1fr 1fr; }
+      .nav-links a.hide-sm { display: none; }
+      .quick-inner { padding: 32px 24px; }
+    }
+    @media (max-width: 560px) {
+      .grid { grid-template-columns: 1fr; }
+      body { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-inner">
+    <a class="brand" href="#">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#161916"/><path d="M16 4.6 27 9.9v12.2L16 27.4 5 22.1V9.9z" fill="none" stroke="#c5e694" stroke-width="2.4" stroke-linejoin="round"/><path d="M5 9.9 16 15.2l11-5.3M16 15.2v12.2" fill="none" stroke="#c5e694" stroke-width="2.4" stroke-linejoin="round"/></svg>
+      Skillbox
+    </a>
+    <div class="nav-links">
+      <a class="hide-sm" href="#agents">How it works</a>
+      <a class="hide-sm" href="#features">Features</a>
+      <a class="hide-sm" href="#quickstart">Quick start</a>
+      <a class="btn ghost" href="https://github.com/kitze/skillbox">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/></svg>
+        GitHub
+      </a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-inner">
+    <div>
+      <div class="eyebrow"><span>Self-hosted</span><span>MCP native</span><span>MIT licensed</span></div>
+      <h1>A skills library for your <em>AI agents</em></h1>
+      <p class="sub">Write a skill once. Version it like code. Serve it to every agent you run — over MCP, CLI, or HTTP. On your own box, under your own keys.</p>
+      <div class="cta">
+        <a class="btn" href="https://github.com/kitze/skillbox">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25"/></svg>
+          Star on GitHub
+        </a>
+        <a class="btn ghost" href="#quickstart">Self-host in 2 minutes</a>
+      </div>
+    </div>
+    <div class="hero-img reveal"><img src="/assets/hero.webp" width="1600" height="1073" alt="A dark crate with glowing skill cards floating out of it" fetchpriority="high" /></div>
+  </div>
+</header>
+
+<div class="strip">
+  <div class="wrap strip-inner">
+    <div class="reveal">
+      <h2>What's a skill?</h2>
+      <p>A markdown playbook plus any files it needs — the stuff that teaches an agent a workflow it doesn't know. Skillbox stores them, versions them, and hands them to agents on demand, pinned to exact revisions.</p>
+    </div>
+    <div class="skillcard reveal"><span class="c"># SKILL.md</span>
+<span class="k">---</span>
+<span class="k">name:</span> deploy-my-app
+<span class="k">description:</span> Build, verify and ship to prod
+<span class="k">---</span>
+
+1. Run the test suite. Never skip it.
+2. Build with `bun run build`.
+3. Deploy via `scripts/ship.sh`, check health.</div>
+  </div>
+</div>
+
+<section class="feature wrap" id="agents">
+  <div class="feat">
+    <img class="reveal" src="/assets/agents.webp" width="1600" height="1073" alt="Five robot agents connected by glowing cables to a central cube" loading="lazy" />
+    <div class="txt reveal">
+      <h2>One library, every agent</h2>
+      <p>Claude, Codex, Cursor — anything that speaks MCP. Skillbox ships an HTTP MCP server, a stdio bridge, and a CLI with checksum-verified downloads. Agents search the catalog, load pinned revisions, and report what they actually used.</p>
+      <div class="chips">
+        <span class="chip">search_skills</span>
+        <span class="chip">recommend_skills</span>
+        <span class="chip">load_skill</span>
+        <span class="chip">read_skill_file</span>
+        <span class="chip">report_skill_use</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="feat flip">
+    <div class="txt reveal">
+      <h2>Versioned like code</h2>
+      <p>Every publish is an immutable revision. Conflict detection stops silent overwrites, restore brings anything back, and agents can propose changes that you review before they land. Nothing shifts under your agents' feet.</p>
+    </div>
+    <img class="reveal" src="/assets/revisions.webp" width="1600" height="1073" alt="A stack of translucent versioned layers with a restore arrow" loading="lazy" />
+  </div>
+
+  <div class="feat">
+    <img class="reveal" src="/assets/selfhost.webp" width="1600" height="1073" alt="A cozy mini server with a glowing shield and a plant" loading="lazy" />
+    <div class="txt reveal">
+      <h2>Your box, your rules</h2>
+      <p>Docker-only setup that starts completely empty — no seeded accounts, no phoning home. Client keys are shown once and stored as hashes. Provider keys are encrypted with AES-256-GCM. And Skillbox never executes uploaded skill code.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="features">
+  <div class="grid-head reveal">
+    <h2>Everything a library needs</h2>
+    <p>Small surface, sharp tools. No accounts, no cloud, no telemetry.</p>
+  </div>
+  <div class="grid">
+    <div class="card reveal">
+      <img src="/assets/icon-editor.webp" width="76" height="76" alt="" loading="lazy" />
+      <h3>Markdown editor</h3>
+      <p>Skill and file editor with frontmatter, plus native folder import and export.</p>
+    </div>
+    <div class="card reveal">
+      <img src="/assets/icon-history.webp" width="76" height="76" alt="" loading="lazy" />
+      <h3>Immutable revisions</h3>
+      <p>Pinned versions, conflict detection, and one-click restore of anything.</p>
+    </div>
+    <div class="card reveal">
+      <img src="/assets/icon-keys.webp" width="76" height="76" alt="" loading="lazy" />
+      <h3>Revocable keys</h3>
+      <p>Per-client keys shown once, stored hashed. Profiles scope exactly what each agent can see and do.</p>
+    </div>
+    <div class="card reveal">
+      <img src="/assets/icon-mcp.webp" width="76" height="76" alt="" loading="lazy" />
+      <h3>MCP native</h3>
+      <p>HTTP MCP endpoint plus a Node/Bun stdio bridge for clients that need it.</p>
+    </div>
+    <div class="card reveal">
+      <img src="/assets/icon-jev.webp" width="76" height="76" alt="" loading="lazy" />
+      <h3>Smart recommendations</h3>
+      <p>Task-aware skill ranking with your own AI key. Falls back to plain search — and says so.</p>
+    </div>
+    <div class="card reveal">
+      <img src="/assets/icon-vault.webp" width="76" height="76" alt="" loading="lazy" />
+      <h3>Backups that survive</h3>
+      <p>Protected PostgreSQL and config backups with explicit, deliberate restore tooling.</p>
+    </div>
+  </div>
+</section>
+
+<section class="quick wrap" id="quickstart">
+  <div class="quick-inner">
+    <div class="reveal">
+      <h2>Self-host it tonight</h2>
+      <p>Docker Compose v2 and Bash. That's the whole requirements list — no host Node, no host Bun. Setup generates unique random credentials into a private <code style="font-family:var(--mono);font-size:14px;color:var(--lime)">.env</code> and refuses to overwrite it.</p>
+    </div>
+    <div class="term reveal"><span class="p">$</span> git clone https://github.com/kitze/skillbox.git
+<span class="p">$</span> cd skillbox
+<span class="p">$</span> bash scripts/skillbox.sh setup
+<span class="p">$</span> bash scripts/skillbox.sh start
+<span class="c"># → http://127.0.0.1:4791</span></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <span>MIT licensed. Built by <a href="https://x.com/thekitze" style="color:var(--fg)">@thekitze</a>.</span>
+    <span class="spacer">
+      <a href="https://github.com/kitze/skillbox">GitHub</a>
+      <a href="https://github.com/kitze/skillbox#quick-start">Docs</a>
+      <a href="https://kitze.io">kitze.io</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+  }, { threshold: 0.12 });
+  document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+</script>
+
+</body>
+</html>

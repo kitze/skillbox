@@ -5,6 +5,10 @@ import { skills } from "../src/server/schema";
 import { eq } from "drizzle-orm";
 import { ADMIN, publish, sha256 } from "../src/server/library";
 import type { SkillFile } from "../src/shared";
+import {
+  hasEmbeddedSecret,
+  excludedImportPath,
+} from "../src/skill-import-safety";
 await migrate();
 const roots = process.argv.slice(2);
 if (!roots.length)
@@ -68,18 +72,7 @@ for (const root of roots) {
       for (const e of await readdir(dir, { withFileTypes: true })) {
         const rel = prefix + e.name,
           path = join(dir, e.name);
-        if (
-          [
-            ".git",
-            "node_modules",
-            "__pycache__",
-            ".venv",
-            ".DS_Store",
-            "sync.json",
-          ].includes(e.name) ||
-          e.name === ".env" ||
-          e.name.startsWith(".env.")
-        ) {
+        if (excludedImportPath(rel)) {
           report.skipped.push({
             id,
             path: rel,
@@ -99,11 +92,7 @@ for (const root of roots) {
         if (!stat.isFile()) continue;
         const bytes = await readFile(path);
         const text = bytes.toString("utf8");
-        if (
-          /-----BEGIN (?:RSA |OPENSSH |EC )?PRIVATE KEY-----|\bgh[pousr]_[A-Za-z0-9]{30,}|\bsk-(?:proj-)?[A-Za-z0-9_-]{40,}/.test(
-            text,
-          )
-        ) {
+        if (hasEmbeddedSecret(text)) {
           unsafe = true;
           report.skipped.push({
             id,

@@ -1,0 +1,30 @@
+# Deployed by Coolify (project: skillbox) on beast. Postgres is a separate Coolify database resource (DATABASE_URL env).
+services:
+  skillbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    init: true
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      SKILLBOX_ADMIN_TOKEN: ${SKILLBOX_ADMIN_TOKEN}
+      SKILLBOX_ORIGIN: ${SKILLBOX_ORIGIN}
+      SKILLBOX_ALLOWED_ORIGINS: ${SKILLBOX_ALLOWED_ORIGINS:-}
+      SKILLBOX_EXECUTOR_RESOURCE_ALIASES: ${SKILLBOX_EXECUTOR_RESOURCE_ALIASES:-}
+    volumes:
+      - app-data:/app/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:4791/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+volumes:
+  app-data:

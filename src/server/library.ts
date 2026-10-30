@@ -8,13 +8,14 @@ import { parseSkillIcon, type SkillIcon } from "../skill-icons";
 import { createHash, randomUUID } from "node:crypto";
 import matter from "gray-matter";
 import { and, eq, desc, inArray, sql, type SQL } from "drizzle-orm";
-import { db } from "./db";
+import { connection, db } from "./db";
 import { skills, revisions, events } from "./schema";
 import type {
   CompatibilityFilter,
   Principal,
   SkillFile,
   SkillMetadata,
+  GitHubSource,
 } from "../shared";
 import {
   catalogFilter,
@@ -291,6 +292,13 @@ export async function record(
     skillId,
   });
 }
+// The MCP transport is stateless, so the client name sent on initialize is
+// read back from the latest connect event for this token on later requests.
+export async function lastClientHarness(clientId: string) {
+  const [row] =
+    await connection`SELECT context->>'clientHarness' AS harness FROM events WHERE client_id=${clientId} AND operation='connect' AND context ? 'clientHarness' ORDER BY created_at DESC LIMIT 1`;
+  return typeof row?.harness === "string" && row.harness ? row.harness : undefined;
+}
 export async function search(
   p: Principal,
   query = "",
@@ -436,7 +444,10 @@ export async function recommendSkills(
     signal,
   );
   await record(await principal(), "recommend");
-  return { ...result, ...(configured ? { provider: configured.provider } : {}) };
+  return {
+    ...result,
+    ...(configured ? { provider: configured.provider } : {}),
+  };
 }
 export async function revisionFor(p: Principal, id: string, revision?: string) {
   id = await resolveReferenceId(id);
@@ -507,6 +518,7 @@ export async function load(p: Principal, id: string, revision?: string) {
     ...(await referenceDetails(p, instructions)),
     revision: r.id,
     checksum: r.checksum,
+    source: r.source ?? null,
     metadata: { ...r.metadata, disabled: r.metadata.disabled ?? false },
     instructions: Buffer.from(
       r.files.find((f) => f.path === "SKILL.md")!.content,
@@ -565,6 +577,7 @@ export async function publish(
   importReferenceId?: string,
   options: {
     archive?: boolean;
+    source?: GitHubSource;
     database?: Pick<typeof db, "transaction">;
   } = {},
 ) {
@@ -707,20 +720,19 @@ export async function publish(
       skillId: id,
       files,
       metadata: meta,
+      source: options.source,
       checksum,
       message: message.slice(0, 200),
       author: p.name,
     });
-    await tx
-      .insert(events)
-      .values({
-        id: randomUUID(),
-        clientId: p.id,
-        clientName: p.name,
-        operation: "publish",
-        skillId: id,
-        context: { ...p.context, revision },
-      });
+    await tx.insert(events).values({
+      id: randomUUID(),
+      clientId: p.id,
+      clientName: p.name,
+      operation: "publish",
+      skillId: id,
+      context: { ...p.context, revision },
+    });
   });
   return { id, revision, checksum };
 }
@@ -733,6 +745,7 @@ export async function history(p: Principal, id: string) {
       author: revisions.author,
       createdAt: revisions.createdAt,
       checksum: revisions.checksum,
+      source: revisions.source,
     })
     .from(revisions)
     .where(eq(revisions.skillId, id))
@@ -740,7 +753,7 @@ export async function history(p: Principal, id: string) {
 }
 export function makeFile(
   path: string,
-  text: string,
+  text: string | Buffer,
   executable = false,
 ): SkillFile {
   const b = Buffer.from(text);

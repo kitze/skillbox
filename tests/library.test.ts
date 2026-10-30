@@ -453,6 +453,292 @@ test("MCP advertises usage reporting alongside reader and writer tools", async (
     );
   }
 });
+test("MCP Resources and manifest previews preserve grants, integrity and legacy tools", async () => {
+  const { skillResourceUri } = await import("../src/skill-manifest");
+  const id = "test-native-" + randomUUID().slice(0, 8);
+  const legacyId = "test-legacy-" + randomUUID().slice(0, 8);
+  ids.push(id, legacyId);
+  const bytes = Buffer.from([0, 255, 42]);
+  const revision = await publish(ADMIN, id, [
+    ...files(id), makeFile("assets/data.bin", bytes),
+    makeFile("references/large.txt", "x".repeat(170_000)),
+  ], null);
+  await publish(ADMIN, legacyId, [makeFile("SKILL.md", "---\ndescription: Missing required name\n---\nLegacy")], null);
+  const client = await createClient("Resources fixture", "reader", false, [id]);
+  const rpc = async (method: string, params: unknown = {}, token = client.token) => (await (await app.request("/mcp", {
+    method: "POST", headers: { Authorization: "Bearer " + token, "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+  })).json());
+  const get = async (path: string, key = client.token) => app.request(path, { headers: { Authorization: "Bearer " + key } });
+  try {
+    const loaded = await load(ADMIN, id);
+    const uri = skillResourceUri(loaded.referenceId, id);
+    const init = await rpc("initialize", { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "fixture", version: "1" } });
+    expect(init.result.capabilities.resources).toBeDefined();
+    expect(init.result.capabilities.extensions?.["io.modelcontextprotocol/skills"]).toBeUndefined();
+    const listing = await rpc("resources/list");
+    expect(listing.result.resources.map((r: any) => r.uri)).toEqual([uri]);
+    expect((await rpc("resources/list", { cursor: "bad" })).error.code).toBe(-32602);
+    const preview = await (await get(`/api/skills/${id}/manifest`)).json();
+    expect(preview.revision).toBe(revision.revision);
+    expect(preview.skill.resources).toHaveLength(4);
+    const content = await rpc("resources/read", { uri });
+    expect(content.result.contents[0].text).toBe(Buffer.from(files(id)[0].content, "base64").toString("utf8"));
+    const blob = await rpc("resources/read", { uri: skillResourceUri(loaded.referenceId, id, "assets/data.bin") });
+    expect(Buffer.from(blob.result.contents[0].blob, "base64")).toEqual(bytes);
+    const large = await rpc("resources/read", { uri: skillResourceUri(loaded.referenceId, id, "references/large.txt") });
+    expect(large.result.contents[0].text).toHaveLength(170_000);
+    const other = await load(ADMIN, legacyId);
+    for (const denied of [skillResourceUri(other.referenceId, legacyId), uri.replace(id, "wrong-name"), uri.replace("SKILL.md", "%2e%2e/SKILL.md")])
+      expect((await rpc("resources/read", { uri: denied })).error.code).toBe(-32602);
+    expect((await get("/api/skill-compatibility")).status).toBe(403);
+    expect((await get(`/api/skills/${legacyId}/manifest`)).status).toBe(404);
+    expect((await get(`/api/skills/${legacyId}/manifest`, process.env.SKILLBOX_ADMIN_TOKEN!)).status).toBe(422);
+    const { compatibilityPage } = await import("../src/server/skill-resources");
+    const auditItems = [];
+    for (let offset = 0;;) {
+      const page = await compatibilityPage(ADMIN, offset);
+      auditItems.push(...page.items);
+      if (!page.hasMore) break;
+      offset = page.nextOffset!;
+    }
+    expect(auditItems.find((item) => item.id === legacyId)?.issues.some((issue) => issue.code === "name")).toBe(true);
+    expect((await load(ADMIN, legacyId)).instructions).toContain("Legacy");
+    const changed = await publish(ADMIN, id, files(id, "Updated"), revision.revision);
+    const next = await (await get(`/api/skills/${id}/manifest`)).json();
+    expect(next.skill.uri).toBe(uri);
+    expect(next.skill.resources[0].digest).not.toBe(preview.skill.resources[0].digest);
+    const hidden = await setDisabled(ADMIN, id, true, changed.revision);
+    expect((await rpc("resources/read", { uri })).error.code).toBe(-32602);
+    expect((await rpc("resources/list")).result.resources).toEqual([]);
+    const enabled = await setDisabled(ADMIN, id, false, hidden.revision);
+    await archiveSkill(ADMIN, id, enabled.revision);
+    expect((await rpc("resources/read", { uri })).error.code).toBe(-32602);
+  } finally {
+    await db.delete(events).where(eq(events.clientId, client.id));
+    await db.delete(clients).where(eq(clients.id, client.id));
+  }
+});
+
+test("released Skills protocol works with SDK v2 client, private manifests and legacy fallback", async () => {
+  const { Client, StreamableHTTPClientTransport } = await import("@modelcontextprotocol/client");
+  const { ResultSchema } = await import("@modelcontextprotocol/core");
+  const { z } = await import("zod");
+  const { SKILLS_EXTENSION, skillResourceUri } = await import("../src/skill-manifest");
+  const id = "test-protocol-" + randomUUID().slice(0, 8);
+  const hiddenId = "test-protocol-hidden-" + randomUUID().slice(0, 8);
+  ids.push(id, hiddenId);
+  const extraIds = Array.from({ length: 25 }, (_, n) => `${id}-page-${n.toString().padStart(2, "0")}`);
+  ids.push(...extraIds);
+  const marker = "/tmp/skillbox-native-must-not-execute-" + randomUUID();
+  const script = `#!/bin/sh\ntouch ${marker}\n`;
+  const published = await publish(ADMIN, id, [
+    ...files(id), makeFile("references/a #?%.md", "Exact reserved filename 🌋"),
+    makeFile("assets/picture.png", Buffer.from([0, 255, 1])),
+    makeFile("scripts/run.sh", script, true),
+  ], null);
+  await publish(ADMIN, hiddenId, files(hiddenId), null);
+  for (const entry of extraIds) await publish(ADMIN, entry, files(entry), null);
+  const credential = await createClient("Native protocol fixture", "reader", false, [id, ...extraIds]);
+  const principalHeaders = { Authorization: "Bearer " + credential.token };
+  const meta = {
+    "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+    "io.modelcontextprotocol/clientCapabilities": { extensions: { [SKILLS_EXTENSION]: {} } },
+    "io.modelcontextprotocol/clientInfo": { name: "native-fixture", version: "1" },
+  };
+  const rpc = async (method: string, params: Record<string, unknown> = {}, metadata: unknown = meta) => {
+    const response = await app.request("/mcp", {
+      method: "POST", headers: { ...principalHeaders, "Content-Type": "application/json", Accept: "application/json, text/event-stream", "Mcp-Method": method,
+        ...(method === "resources/read" ? { "Mcp-Name": String(params.uri) } : {}),
+      },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params: { ...params, _meta: metadata } }),
+    });
+    return { status: response.status, body: await response.json() };
+  };
+  const entrySchema = z.object({
+    uri: z.string(), frontmatter: z.object({ name: z.string(), description: z.string() }).passthrough(),
+    resources: z.array(z.object({ uri: z.string(), digest: z.string(), size: z.number() })),
+  });
+  const listSchema = ResultSchema.extend({ skills: z.array(entrySchema), nextCursor: z.string().optional(), ttlMs: z.number(), cacheScope: z.literal("private") });
+  const getSchema = ResultSchema.extend({ skill: entrySchema, ttlMs: z.number(), cacheScope: z.literal("private") });
+  const client = new Client({ name: "skillbox-native-verifier", version: "1" }, {
+    versionNegotiation: { mode: { pin: "2026-07-28" } },
+    capabilities: { extensions: { [SKILLS_EXTENSION]: {} } },
+  });
+  try {
+    const discover = await rpc("server/discover");
+    expect({ status: discover.status, error: discover.body.error }).toEqual({ status: 200, error: undefined });
+    expect(discover.body.result.resultType).toBe("complete");
+    expect(discover.body.result.capabilities.extensions[SKILLS_EXTENSION]).toEqual({});
+    expect(discover.body.result.capabilities.resources).toBeDefined();
+    expect(discover.body.result._meta["io.modelcontextprotocol/serverInfo"].name).toBe("skillbox");
+    const address = skillResourceUri((await load(ADMIN, id)).referenceId, id);
+    // Direct get works before listing; revisions are not part of stable identity.
+    const direct = await rpc("skills/get", { uri: address });
+    expect(direct.body.result.skill.uri).toBe(address);
+    expect(direct.body.result).toMatchObject({ resultType: "complete", ttlMs: 0, cacheScope: "private" });
+    const wrong = await rpc("skills/get", { uri: skillResourceUri((await load(ADMIN, hiddenId)).referenceId, hiddenId) });
+    expect(wrong.body.error.code).toBe(-32602);
+    expect((await rpc("skills/get", { uri: address.replace("SKILL.md", "scripts/run.sh") })).body.error.code).toBe(-32602);
+    expect((await rpc("skills/list", { cursor: "offset:Infinity" })).body.error.code).toBe(-32602);
+    const unsupported = await rpc("skills/list", {}, { ...meta, "io.modelcontextprotocol/protocolVersion": "1900-01-01" });
+    expect(unsupported.status).toBe(400);
+    expect(unsupported.body.error).toBeDefined();
+    const malformed = await rpc("skills/list", {}, { "io.modelcontextprotocol/protocolVersion": "2026-07-28" });
+    expect(malformed.status).toBe(400);
+    await client.connect(new StreamableHTTPClientTransport(new URL("http://test.local/mcp"), {
+      requestInit: { headers: principalHeaders },
+      fetch: async (input, init) => app.fetch(new Request(input, init)),
+    }));
+    expect(client.getProtocolEra()).toBe("modern");
+    const catalog = await client.request({ method: "skills/list" }, listSchema);
+    expect(catalog.skills).toHaveLength(25);
+    expect(catalog.nextCursor).toBeDefined();
+    const remaining = await client.request({ method: "skills/list", params: { cursor: catalog.nextCursor } }, listSchema);
+    expect(remaining.skills).toHaveLength(1);
+    expect(remaining.nextCursor).toBeUndefined();
+    expect(new Set([...catalog.skills, ...remaining.skills].map((s) => s.uri)).size).toBe(26);
+    const entry = (await client.request({ method: "skills/get", params: { uri: address } }, getSchema)).skill;
+    for (const resource of entry.resources) {
+      const read = await client.readResource({ uri: resource.uri });
+      const content = read.contents[0];
+      const bytes = "text" in content ? Buffer.from(content.text as string) : Buffer.from(content.blob as string, "base64");
+      expect(bytes.length).toBe(resource.size);
+      expect("sha256:" + (await import("../src/server/library")).sha256(bytes)).toBe(resource.digest);
+      const wire = await rpc("resources/read", { uri: resource.uri });
+      expect(wire.body.result).toMatchObject({ resultType: "complete", ttlMs: 0, cacheScope: "private" });
+      if (resource.uri.endsWith("picture.png")) expect(content.mimeType).toBe("image/png");
+    }
+    expect(await Bun.file(marker).exists()).toBe(false);
+    expect((await client.listTools()).tools).toHaveLength(5);
+    const legacyTool = await client.callTool({ name: "load_skill", arguments: { id } });
+    expect(legacyTool.isError).not.toBe(true);
+    const next = await publish(ADMIN, id, files(id, "Changed content"), published.revision);
+    const changed = await client.request({ method: "skills/get", params: { uri: address } }, getSchema);
+    expect(changed.skill.uri).toBe(entry.uri);
+    expect(changed.skill.resources).not.toEqual(entry.resources);
+    await setDisabled(ADMIN, id, true, next.revision);
+    expect((await rpc("skills/get", { uri: address })).body.error.code).toBe(-32602);
+    expect((await rpc("resources/read", { uri: address })).body.error.code).toBe(-32602);
+    // The stdio CLI remains a transparent bridge for the modern envelope.
+    const loopback = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: app.fetch });
+    try {
+      const child = Bun.spawn([process.execPath, "cli/skillbox.mjs", "mcp"], {
+        env: { ...process.env, SKILLBOX_CONFIG: "/tmp/skillbox-no-config", SKILLBOX_URL: `http://127.0.0.1:${loopback.port}`, SKILLBOX_TOKEN: credential.token },
+        stdin: "pipe", stdout: "pipe", stderr: "pipe",
+      });
+      child.stdin.write([
+        { jsonrpc: "2.0", id: 7, method: "server/discover", params: { _meta: meta } },
+        { jsonrpc: "2.0", id: 8, method: "skills/list", params: { _meta: { ...meta, "io.modelcontextprotocol/protocolVersion": "1900-01-01" } } },
+      ].map((message) => JSON.stringify(message)).join("\n") + "\n");
+      child.stdin.end();
+      const text = await new Response(child.stdout).text();
+      expect(await child.exited).toBe(0);
+      const replies = text.trim().split("\n").map((line) => JSON.parse(line));
+      expect(replies[0].result.capabilities.extensions[SKILLS_EXTENSION]).toEqual({});
+      expect(replies[1].id).toBe(8);
+      expect(replies[1].error.code).toBe(unsupported.body.error.code);
+    } finally { loopback.stop(true); }
+    const [stored] = await db.select().from(clients).where(eq(clients.id, credential.id));
+    await db.update(profiles).set({ skillIds: [], allSkills: false }).where(eq(profiles.id, stored.profileId));
+    expect((await rpc("skills/list")).body.result.skills).toEqual([]);
+  } finally {
+    await client.close();
+    await db.delete(events).where(eq(events.clientId, credential.id));
+    await db.delete(clients).where(eq(clients.id, credential.id));
+  }
+});
+
+test("GitHub URL preview is owner-only and publish preserves SHA provenance and revision conflicts", async () => {
+  const { githubFixture, IMPORT_COMMIT } =
+    await import("./fixtures/github-import");
+  const id = "test-github-" + randomUUID().slice(0, 8);
+  ids.push(id);
+  const fixture = githubFixture(id);
+  const originalFetch = globalThis.fetch;
+  const request = (
+    route: string,
+    body: unknown,
+    key = process.env.SKILLBOX_ADMIN_TOKEN!,
+  ) =>
+    app.request(route, {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + key,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+  globalThis.fetch = fixture.fetcher;
+  try {
+    const url = `https://github.com/fixture/skills/tree/${IMPORT_COMMIT}/skills/example`;
+    expect(
+      (await request("/api/imports/github/preview", { url }, allowedToken))
+        .status,
+    ).toBe(403);
+    expect(fixture.requests).toHaveLength(0);
+    const preview = await request("/api/imports/github/preview", { url });
+    expect(preview.status).toBe(200);
+    const p = await preview.json();
+    expect(p.expectedRevision).toBeNull();
+    expect(p.files.every((file: any) => file.content === undefined)).toBe(true);
+    await expect(revisionFor(ADMIN, id)).rejects.toMatchObject({ status: 404 });
+    expect(
+      (
+        await request("/api/imports/github/publish", {
+          url: "https://github.com/fixture/skills/tree/main/skills/example",
+          id,
+          expectedRevision: null,
+        })
+      ).status,
+    ).toBe(400);
+    const published = await request("/api/imports/github/publish", {
+      url: p.source.url,
+      id,
+      expectedRevision: null,
+    });
+    expect(published.status).toBe(200);
+    const saved = await published.json();
+    const loaded = await load(ADMIN, id);
+    expect(loaded.source).toMatchObject({
+      repository: "fixture/skills",
+      commit: IMPORT_COMMIT,
+      path: "skills/example",
+    });
+    expect(loaded.instructions).toBe(p.instructions);
+    expect(
+      loaded.files.find((f) => f.path === "scripts/run.sh")?.executable,
+    ).toBe(true);
+    expect(
+      (
+        await request("/api/imports/github/publish", {
+          url: p.source.url,
+          id,
+          expectedRevision: null,
+        })
+      ).status,
+    ).toBe(409);
+    expect((await load(ADMIN, id)).revision).toBe(saved.revision);
+    const updated = await request("/api/imports/github/publish", {
+      url: p.source.url,
+      id,
+      expectedRevision: saved.revision,
+    });
+    expect(updated.status).toBe(200);
+    const restored = await request(`/api/skills/${id}/restore`, {
+      revision: saved.revision,
+      expectedRevision: (await updated.json()).revision,
+    });
+    expect(restored.status).toBe(200);
+    expect((await load(ADMIN, id)).source?.commit).toBe(IMPORT_COMMIT);
+    expect((await revisionFor(ADMIN, id, saved.revision)).source?.commit).toBe(
+      IMPORT_COMMIT,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("recommendations authorize full leaf catalog before scoring and invalidate grants/lifecycle/revisions", async () => {
   const names = Array.from(
     { length: 6 },
@@ -758,7 +1044,11 @@ test("provider switching preserves separate encrypted keys, migrates Gateway set
     await configureGateway({ apiKey: "fixture-legacy-gateway" });
     const status = await gatewaySettings();
     expect(status.provider).toBe("vercel"); // Old Gateway-only clients never retarget keys to TypeSafe.
-    expect(status.providers).toEqual({ vercel: { configured: true }, typesafe: { configured: true } });
+    expect(status.providers).toEqual({ vercel: { configured: true }, typesafe: { configured: true }, openrouter: { configured: false } });
+    await configureGateway({ provider: "openrouter" });
+    expect(await gatewaySettings()).toMatchObject({ provider: "openrouter", configured: false });
+    await configureGateway({ provider: "openrouter", apiKey: "fixture-openrouter-key" });
+    expect(await gatewaySettings()).toMatchObject({ provider: "openrouter", configured: true, providers: { vercel: { configured: true }, typesafe: { configured: true }, openrouter: { configured: true } } });
     expect(JSON.stringify(status)).not.toContain("fixture-");
     const stored = await connection`SELECT value FROM workspace_settings WHERE id='ai_gateway'`;
     expect(JSON.stringify(stored)).not.toContain("fixture-");
@@ -766,6 +1056,7 @@ test("provider switching preserves separate encrypted keys, migrates Gateway set
     expect(invalid.status).toBe(400);
   } finally {
     globalThis.fetch = previousFetch;
+    await configureGateway({ provider: "openrouter", apiKey: null });
     await configureGateway({ provider: "typesafe", apiKey: null });
     await configureGateway({ provider: "vercel", apiKey: null });
   }

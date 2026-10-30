@@ -57,10 +57,20 @@ function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+// A product name followed by one of these nouns names a dependency (an API
+// key, an account, a model), not the harness the skill runs in.
+const DEPENDENCY_NOUN =
+  "(?:[\\s-]+(?:api|key|keys|token|tokens|account|accounts|subscription|models?|sdk))";
+
+// Negated or exclusionary prose ("Not compatible with Cursor", "works
+// everywhere except Codex") is too ambiguous to turn into an allow-list.
+const NEGATION =
+  /(?<![a-z0-9])(?:not|no|never|without|except|excluding|incompatible|unsupported|isn't|aren't|doesn't|don't|won't|cannot|can't)(?![a-z0-9])/;
+
 function containsToken(haystack: string, token: string) {
   const parts = token.split(/[\s-]+/).map(escapeRegExp);
   return new RegExp(
-    `(?<![a-z0-9])${parts.join("[\\s-]+")}(?![a-z0-9])`,
+    `(?<![a-z0-9])${parts.join("[\\s-]+")}(?![a-z0-9])(?!${DEPENDENCY_NOUN})`,
   ).test(haystack);
 }
 
@@ -135,7 +145,8 @@ export function structuredHarnesses(
 
 export function productsFromCompatibility(text: string): string[] {
   if (!text.trim()) return [];
-  const haystack = text.toLowerCase();
+  const haystack = text.toLowerCase().replace(/\u2019/g, "'");
+  if (NEGATION.test(haystack)) return [];
   const found: string[] = [];
   for (const family of HARNESS_FAMILIES) {
     const tokens = [...family.tokens].sort((a, b) => b.length - a.length);
