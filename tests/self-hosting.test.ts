@@ -22,6 +22,7 @@ test("Umbrel package uses scoped deterministic secrets, proxy auth, persistent d
   expect(manifest.deterministicPassword).toBe(true);
   expect(manifest.defaultPassword).toBe("");
   expect(manifest.permissions).toEqual([]);
+  expect(manifest.description).toContain("OpenRouter");
   expect(compose.services.web.image).toBe(options.image);
   expect(compose.services.db.image).toBe(POSTGRES_IMAGE);
   expect(compose.services.web).not.toHaveProperty("build");

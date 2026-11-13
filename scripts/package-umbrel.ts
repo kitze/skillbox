@@ -84,7 +84,7 @@ description: >-
 
 
   Create and share versioned agent skills, control client access, and connect agents through MCP or the CLI.
-  Optional Jev recommendations require your own TypeSafe AI or Vercel AI Gateway key in Settings. No paid service is needed for normal search and loading.
+  Optional Jev recommendations require your own OpenRouter, TypeSafe AI, or Vercel AI Gateway key in Settings. No paid service is needed for normal search and loading.
 releaseNotes: >-
   Versioned skills, scoped clients, encrypted optional integration settings and task-aware recommendations.
 developer: ${q(options.maintainer ?? "Skillbox contributors")}
