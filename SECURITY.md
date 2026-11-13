@@ -8,7 +8,7 @@ Skillbox is a single-owner, self-hosted application with revocable scoped agent 
 - Provider credentials are optional and supplied by each owner through Settings. They are encrypted in PostgreSQL using AES-256-GCM; encryption depends on the owner token. The status APIs expose no secret values.
 - Database backups plus the owner token can reveal stored integration credentials. Keep them separate and protected. Rotation may require reconnecting integrations.
 - Skill bodies and exported packages are user-managed content, not an appropriate secret store. Anyone granted a skill can read its package and historical revisions unless current access/lifecycle checks deny it. Downloads cannot be recalled by revocation.
-- Jev sends task text and authorized active skill descriptions only to the selected provider (TypeSafe AI or Vercel AI Gateway), using that provider's separately saved key. Provider data policies and charges apply. Removing its key prevents new model requests; an already-sent request cannot be recalled.
+- Jev sends task text and authorized active skill descriptions only to the selected provider (OpenRouter, TypeSafe AI, or Vercel AI Gateway), using that provider's separately saved key. Provider data policies and charges apply. Removing its key prevents new model requests; an already-sent request cannot be recalled.
 - Owner-configured external MCP/OAuth endpoints are trusted administrative configuration. Do not configure unknown endpoints or arbitrary cross-origin OAuth aliases.
 
 ## Reporting
