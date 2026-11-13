@@ -1632,3 +1632,68 @@ test("legacy migration preserves key identity and exact grants, and is repeatabl
     await db.delete(clients).where(eq(clients.id, id));
   }
 });
+test("placeholder optional arguments load the current revision over MCP and HTTP", async () => {
+  const h = {
+    Authorization: "Bearer " + process.env.SKILLBOX_ADMIN_TOKEN,
+    "Content-Type": "application/json",
+    Accept: "application/json, text/event-stream",
+  };
+  const id = ids[0];
+  const current = (await load(ADMIN, id)).revision;
+  const call = async (name: string, args: Record<string, unknown>) =>
+    (
+      await (
+        await app.request("/mcp", {
+          method: "POST",
+          headers: h,
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            method: "tools/call",
+            params: { name, arguments: args },
+          }),
+        })
+      ).json()
+    ).result;
+  for (const revision of ["", "   ", "latest", null]) {
+    const result = await call("load_skill", {
+      id,
+      revision,
+      context: { harness: "", model: "gpt-fixture", task: "", purpose: "" },
+    });
+    expect(result.isError).not.toBe(true);
+    expect(JSON.parse(result.content[0].text).revision).toBe(current);
+  }
+  const listed = await call("search_skills", { query: "", kind: "" });
+  expect(listed.isError).not.toBe(true);
+  expect(
+    JSON.parse(listed.content[0].text).items.map((s: { id: string }) => s.id),
+  ).toContain(id);
+  // Unknown revisions and blank required arguments still fail.
+  expect(
+    (await call("load_skill", { id, revision: randomUUID() })).isError,
+  ).toBe(true);
+  expect(
+    (await call("read_skill_file", { id, revision: "", path: "SKILL.md" }))
+      .isError,
+  ).toBe(true);
+  for (const suffix of ["?revision=", "?revision=latest", "/bundle?revision="]) {
+    const response = await app.request("/api/skills/" + id + suffix, {
+      headers: h,
+    });
+    expect(response.status).toBe(200);
+    expect((await response.json()).revision).toBe(current);
+  }
+  expect(
+    (await app.request("/api/skills?query=&kind=&limit=", { headers: h }))
+      .status,
+  ).toBe(200);
+  expect(
+    (
+      await app.request(
+        "/api/skills/" + id + "/file?revision=&path=SKILL.md",
+        { headers: h },
+      )
+    ).status,
+  ).toBe(404);
+});
