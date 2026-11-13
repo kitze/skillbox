@@ -22,6 +22,7 @@ import * as lib from "./library";
 import { handleMcp, fileSchema } from "./mcp";
 import type { Principal } from "../shared";
 import { recommendationInput } from "./recommendations";
+import { lenientArgs, optionalRevision } from "./optional-args";
 import { compatibilityPage, manifestFor } from "./skill-resources";
 import {
   githubImportInput,
@@ -150,8 +151,8 @@ app.put("/api/bundles/:id", async (c) => {
   );
 });
 app.get("/api/skills", async (c) => {
-  const q = z
-    .object({
+  const q = lenientArgs(
+    z.object({
       query: z.string().max(300).optional(),
       limit: z.coerce.number().int().min(1).max(500).optional(),
       offset: z.coerce.number().int().nonnegative().optional(),
@@ -159,8 +160,8 @@ app.get("/api/skills", async (c) => {
       includeDisabled: z.enum(["true", "false"]).optional(),
       kind: z.enum(["skill", "bundle", "all"]).optional(),
       metrics: z.enum(["true", "false"]).optional(),
-    })
-    .parse(c.req.query());
+    }),
+  ).parse(c.req.query());
   const kinds: ("skill" | "bundle")[] =
     q.kind === "skill"
       ? ["skill"]
@@ -290,7 +291,7 @@ app.get("/api/skills/:id", async (c) =>
     await lib.load(
       c.get("principal"),
       c.req.param("id"),
-      c.req.query("revision"),
+      optionalRevision(c.req.query("revision")),
     ),
   ),
 );
@@ -306,7 +307,7 @@ app.get("/api/skills/:id/bundle", async (c) => {
   const r = await lib.revisionFor(
     c.get("principal"),
     c.req.param("id"),
-    c.req.query("revision"),
+    optionalRevision(c.req.query("revision")),
   );
   await lib.record(c.get("principal"), "bundle", r.skillId, { revision: r.id });
   return c.json({
