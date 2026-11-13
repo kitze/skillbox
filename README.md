@@ -309,7 +309,7 @@ Install `bootstrap/SKILL.md` as the agent's `skills-library` bootstrap. Configur
 }
 ```
 
-Client config: `{ "url": "https://skills.example.com", "token": "YOUR_CLIENT_KEY" }`, mode 0600. Default location: `~/.config/skillbox/config.json`. `SKILLBOX_URL` / `SKILLBOX_TOKEN` override config. Without a URL, the CLI targets localhost, never another person's service. Keep `cli/skillbox.mjs` and `cli/package.mjs` together.
+Client config: `{ "url": "https://skills.example.com", "token": "YOUR_CLIENT_KEY" }`, mode 0600. Default location: `~/.config/skillbox/config.json`. `SKILLBOX_URL` / `SKILLBOX_TOKEN` override config. An optional `harness` (or `SKILLBOX_HARNESS`) names the product for `list` and `search`; without it the CLI sends no harness and your profile default applies. Without a URL, the CLI targets localhost, never another person's service. Keep `cli/skillbox.mjs` and `cli/package.mjs` together.
 
 ```sh
 node cli/skillbox.mjs list
@@ -323,6 +323,8 @@ node cli/skillbox.mjs publish ./my-skill my-skill EXPECTED_REVISION
 ```
 
 Base MCP tools: `search_skills`, `recommend_skills`, `load_skill`, `read_skill_file`, `report_skill_use`. Write/proposal tools appear according to permissions. Recommendations are additive: unqueried `search_skills` remains the mandatory task-start inventory step. Load selected skills with returned revisions before applying them.
+
+When a client identifies its product (`X-Skillbox-Harness`, MCP `initialize` `clientInfo.name`, or an optional profile default harness), Skillbox filters **discovery** to skills that either leave `compatibility` unspecified, describe only an environment (git, docker, …), or match that product. Prefer structured frontmatter `metadata.skillbox.harnesses: [cursor, claude-code]` when a skill should not be offered to every agent; the Agent Skills `compatibility` string is the fallback. When no harness resolves from the header, the stored MCP identity, or the profile default, or the resolved harness is not a recognized product, the client receives the full granted catalog. Filtering never replaces grants: `load_skill` of an explicitly named, granted skill still succeeds. The owner library UI always shows every skill, with a muted product badge when a harness policy is set.
 
 Fetching validates every path, file hash, size, executable flag and package checksum, then writes atomically. It never runs code or installs dependencies. Revoking a key blocks future access but cannot retract already downloaded files. Bundles expand grants into deduplicated current leaf skills; references never grant access by themselves.
 

@@ -33,7 +33,7 @@ export async function authenticate(
       const c = row.clients,
         profile = row.profiles;
       return {
-        context: requestContext(req),
+        context: requestContext(req, profile.defaultHarness),
         id: c.id,
         name: c.name,
         role:
@@ -111,8 +111,8 @@ export function assertAdmin(p: Principal) {
     throw new Problem(403, "Administrator access required");
 }
 
-function requestContext(req: Request) {
-  const field = (name: string) => req.headers.get(name)?.slice(0, 160);
+function requestContext(req: Request, defaultHarness?: string | null) {
+  const field = (name: string) => req.headers.get(name)?.slice(0, 160) || undefined;
   return {
     source:
       new URL(req.url).pathname === "/mcp"
@@ -120,7 +120,7 @@ function requestContext(req: Request) {
         : req.headers.get("x-skillbox-source") === "cli"
           ? "cli"
           : "api",
-    harness: field("x-skillbox-harness"),
+    harness: field("x-skillbox-harness") || defaultHarness || undefined,
     model: field("x-skillbox-model"),
   };
 }

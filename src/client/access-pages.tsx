@@ -18,12 +18,14 @@ import { Input } from "../components/ui/input";
 import { api, decoded, date } from "./api";
 import { SkillIconView } from "./skill-icon";
 import type { Permissions, SkillSummary, SkillFile } from "../shared";
+import { HARNESS_SUGGESTIONS } from "../shared";
 type Profile = {
   id: string;
   name: string;
   allSkills: boolean;
   skillIds: string[];
   permissions: Permissions;
+  defaultHarness?: string | null;
   version: string;
 };
 type Client = {
@@ -38,6 +40,7 @@ const blank = () => ({
   allSkills: false,
   skillIds: [] as string[],
   permissions: { create: false, update: false, delete: false, propose: true },
+  defaultHarness: "" as string,
 });
 const labels: Record<keyof Permissions, string> = {
   create: "Create skills",
@@ -151,6 +154,7 @@ export function ProfilesPage() {
                       ...p,
                       skillIds: [...p.skillIds],
                       permissions: { ...p.permissions },
+                      defaultHarness: p.defaultHarness ?? "",
                     });
                     setQuery("");
                   }}
@@ -168,6 +172,7 @@ export function ProfilesPage() {
                 {p.allSkills
                   ? "All skills"
                   : `${p.skillIds.length} ${p.skillIds.length === 1 ? "grant" : "grants"}`}
+                {p.defaultHarness ? ` · ${p.defaultHarness}` : ""}
               </p>
               <div className="bundle-members">
                 {p.allSkills ? (
@@ -208,7 +213,9 @@ export function ProfilesPage() {
             <Button
               key={p.id}
               variant="ghost"
-              onClick={() => setDraft({ ...p })}
+              onClick={() =>
+                setDraft({ ...p, defaultHarness: p.defaultHarness ?? "" })
+              }
             >
               {p.name}
             </Button>
@@ -302,6 +309,26 @@ export function ProfilesPage() {
                 />
                 All skills
               </label>
+              <label>
+                Default harness
+                <Input
+                  list="harness-aliases"
+                  value={draft.defaultHarness ?? ""}
+                  placeholder="Optional — used when the client omits a harness"
+                  onChange={(e) =>
+                    setDraft({ ...draft, defaultHarness: e.target.value })
+                  }
+                />
+                <datalist id="harness-aliases">
+                  {HARNESS_SUGGESTIONS.map((name) => (
+                    <option value={name} key={name} />
+                  ))}
+                </datalist>
+              </label>
+              <p className="muted">
+                Live MCP/CLI harness headers still win. Empty keeps the full
+                granted catalog when the client does not identify a product.
+              </p>
               {!draft.allSkills && (
                 <>
                   <div className="bundle-members">
