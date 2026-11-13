@@ -1,11 +1,11 @@
 ---
 name: skills-library
-description: ALWAYS browse the Skills Library at the start of a task to discover available workflows. Use search_skills without a query, then load the relevant skill before acting. Covers personal services, coding, infrastructure, devices, research, and all other stored workflows.
+description: Browse the Skills Library when a task needs a stored workflow. Search with search_skills, then load the relevant skill before acting. Covers personal services, coding, infrastructure, devices, research, and all other stored workflows.
 ---
 
 # Skills Library
 
-At the beginning of each task, call `search_skills` without a query once. This returns the authorized skill index. If more pages exist, fetch them. Search again when the task changes or an expected workflow is missing.
+When a task needs a workflow, call `search_skills` with a query for it. Some harnesses prefix the tool names with the server name (Pi: `skillbox_search_skills`, `skillbox_load_skill`). Without a query it returns the whole authorized skill index; use that only when a query finds nothing. If more pages exist, fetch them. Search again when the task changes or an expected workflow is missing.
 
 Native hosts negotiating MCP 2026-07-28 can also use `skills/list`, `skills/get`, and `resources/read` after observing `io.modelcontextprotocol/skills` in `server/discover`. Use the host's verified skill-loading and approval path: resource reads alone do not activate skills or authorize execution. Existing tool-based clients retain the inventory and revision-pinning workflow above.
 
