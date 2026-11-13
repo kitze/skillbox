@@ -388,6 +388,21 @@ test("missing auth and invalid tokens fail closed", async () => {
     expect(r.status).toBe(401);
   }
 });
+
+test("text-only file reads reject malformed UTF-8 instead of replacing bytes", async () => {
+  const id = "test-invalid-utf8-" + randomUUID().slice(0, 8);
+  ids.push(id);
+  const revision = await publish(
+    ADMIN,
+    id,
+    [...files(id), makeFile("references/invalid.txt", Buffer.from([0xff]))],
+    null,
+  );
+  const { readFile } = await import("../src/server/library");
+  await expect(
+    readFile(ADMIN, id, revision.revision, "references/invalid.txt"),
+  ).rejects.toMatchObject({ status: 415 });
+});
 test("allowlist filters browse and blocks direct content, history and bundles", async () => {
   const list = await (
     await app.request("/api/skills", { headers: headers() })
