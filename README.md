@@ -140,29 +140,17 @@ Self\-hosted, versioned skills library for AI agents\. MCP, scoped clients, and 
       Know what matters. Get it fixed. Experience spans high-traffic consumer platforms, cloud infrastructure, and security — built under real operational pressure.
     </td>
     <td width="33%" valign="top">
-      <a href="https://browserless.io/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/browserless.png" width="40" alt="Browserless.io logo"></a><br>
-      <strong><a href="https://browserless.io/?ref=kitze%2Fskillbox">Browserless.io</a></strong><br>
-      The web layer your agent runs on.
-    </td>
-  </tr>
-  <tr>
-    <td width="33%" valign="top">
       <a href="https://www.strix.ai/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/strix.png" width="40" alt="Strix logo"></a><br>
       <strong><a href="https://www.strix.ai/?ref=kitze%2Fskillbox">Strix</a></strong><br>
       Hack yourself before the bad guys do. Open source (70k+ stars on Github)
     </td>
+  </tr>
+  <tr>
     <td width="33%" valign="top">
       <a href="https://maplevc.com/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/maple-vc.jpg" width="40" alt="Maple VC logo"></a><br>
       <strong><a href="https://maplevc.com/?ref=kitze%2Fskillbox">Maple VC</a></strong><br>
       We&#39;re 3 operators (digitalocean, uber, shopify) turned investors who write first checks into folks with ambition to build global businesses.
     </td>
-    <td width="33%" valign="top">
-      <a href="https://www.rakazo.com/?ref=kitze%2Fskillbox"><img src="https://rakazo.com/brand/rakazo-mark.png" width="40" alt="Rakazo logo"></a><br>
-      <strong><a href="https://www.rakazo.com/?ref=kitze%2Fskillbox">Rakazo</a></strong><br>
-      Open source Grok Bot
-    </td>
-  </tr>
-  <tr>
     <td width="33%" valign="top">
       <a href="https://www.theinfluencer.ai/?ref=kitze%2Fskillbox"><img src="https://www.theinfluencer.ai/logos/the-influencer-ai-logo-1024.png" width="40" alt="The Influencer AI logo"></a><br>
       <strong><a href="https://www.theinfluencer.ai/?ref=kitze%2Fskillbox">The Influencer AI</a></strong><br>
@@ -173,22 +161,17 @@ Self\-hosted, versioned skills library for AI agents\. MCP, scoped clients, and 
       <strong><a href="https://pluginboard.ai/?ref=kitze%2Fskillbox">Pluginboard</a></strong><br>
       Find the right plugins for your AI agents. Plugins, skills and step-by-step recipes for Claude, ChatGPT, Grokbot, Muse, Gemini and more.
     </td>
+  </tr>
+  <tr>
     <td width="33%" valign="top">
       <a href="https://file.cafe/?ref=kitze%2Fskillbox"><img src="https://file.cafe/brand/icon-512.png" width="40" alt="file.cafe logo"></a><br>
       <strong><a href="https://file.cafe/?ref=kitze%2Fskillbox">file.cafe</a></strong><br>
       Free, instant file sharing.
     </td>
-  </tr>
-  <tr>
     <td width="33%" valign="top">
       <a href="https://linkdr.com/?ref=kitze%2Fskillbox"><img src="https://media.gifs.so/sponsors/kitze-io/linkdr.png" width="40" alt="LinkDR logo"></a><br>
       <strong><a href="https://linkdr.com/?ref=kitze%2Fskillbox">LinkDR</a></strong><br>
       Link building that works: real backlinks from hundreds of high-DR sites, done for you or self-serve.
-    </td>
-    <td width="33%" valign="top">
-      <a href="https://outmano.com/?ref=kitze%2Fskillbox"><img src="https://outmano.com/icon-512.png" width="40" alt="Outmano logo"></a><br>
-      <strong><a href="https://outmano.com/?ref=kitze%2Fskillbox">Outmano</a></strong><br>
-      AI agents that watch your competitors so you don&#39;t have to
     </td>
     <td width="33%" valign="top">
       <a href="https://mixpost.app/?utm_source=kitze&amp;utm_medium=sponsor&amp;utm_campaign=kitze-sponsor&amp;ref=kitze%2Fskillbox"><img src="https://mixpost.s3.eu-central-1.amazonaws.com/remote-access/logo-symbol.png" width="40" alt="Mixpost logo"></a><br>
