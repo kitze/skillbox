@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test";
-import { resolve } from "node:path";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 
 test("audit CLI walks pages, reports failures and guards cursor progress", async () => {
   const requests: string[] = [];
@@ -77,6 +79,52 @@ test("audit CLI walks pages, reports failures and guards cursor progress", async
     expect((await run("manifest")).stderr).toContain(
       "Usage: skillbox manifest <id>",
     );
+  } finally {
+    server.stop(true);
+  }
+});
+
+test("CLI discovery sends a harness only when one is configured", async () => {
+  const seen: (string | null)[] = [];
+  const server = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    fetch(request) {
+      seen.push(request.headers.get("X-Skillbox-Harness"));
+      return Response.json({ items: [] });
+    },
+  });
+  const run = async (env: Record<string, string>, ...args: string[]) => {
+    const child = Bun.spawn(
+      [process.execPath, resolve("cli/skillbox.mjs"), ...args],
+      {
+        env: {
+          ...process.env,
+          SKILLBOX_HARNESS: "",
+          SKILLBOX_CONFIG: "/tmp/skillbox-nonexistent-fixture-config",
+          SKILLBOX_URL: `http://127.0.0.1:${server.port}`,
+          SKILLBOX_TOKEN: "fixture-token",
+          ...env,
+        },
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
+    return child.exited;
+  };
+  try {
+    expect(await run({}, "list")).toBe(0);
+    expect(await run({}, "search", "deploy")).toBe(0);
+    expect(await run({ SKILLBOX_HARNESS: "cursor" }, "list")).toBe(0);
+    expect(await run({ SKILLBOX_HARNESS: "some-new-agent" }, "search", "x")).toBe(0);
+    const dir = await mkdtemp(join(tmpdir(), "skillbox-harness-"));
+    const config = join(dir, "config.json");
+    await writeFile(config, JSON.stringify({ harness: "cursor" }));
+    expect(
+      await run({ SKILLBOX_HARNESS: " ", SKILLBOX_CONFIG: config }, "list"),
+    ).toBe(0);
+    await rm(dir, { recursive: true, force: true });
+    expect(seen).toEqual([null, null, "cursor", "some-new-agent", "cursor"]);
   } finally {
     server.stop(true);
   }

@@ -1,5 +1,5 @@
 import { Clock, Files } from "lucide-react";
-import type { SkillSummary } from "../shared";
+import { harnessBadgeLabel, type SkillSummary } from "../shared";
 import { PACKAGE_BANDS, packageBand } from "../package-metrics";
 export const LENGTH_BANDS = PACKAGE_BANDS;
 export const lengthBand = packageBand;
@@ -12,6 +12,10 @@ export function relativeAccess(value: string) {
   if (minutes < 60) return `${minutes}m ago`;
   if (minutes < 1440) return `${Math.floor(minutes / 60)}h ago`;
   return `${Math.floor(minutes / 1440)}d ago`;
+}
+export function HarnessBadge({ skill }: { skill: SkillSummary }) {
+  const label = harnessBadgeLabel(skill.harnessPolicy);
+  return label ? <span className="harness-badge">{label}</span> : null;
 }
 export function SkillMetrics({ skill }: { skill: SkillSummary }) {
   if (skill.characters === undefined) return null;

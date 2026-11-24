@@ -4,7 +4,7 @@ import { SkillReference, ReferencePicker } from "./skill-reference";
 import { ExecutorSettings, SkillIntegrations } from "./executor-settings";
 import { GitHubImportPage } from "./github-import";
 import { isIconAsset } from "../package-metrics";
-import { SkillMetrics, LENGTH_BANDS, lengthBand } from "./skill-metrics";
+import { SkillMetrics, HarnessBadge, LENGTH_BANDS, lengthBand } from "./skill-metrics";
 import { SkillIconView, SkillIconEditor } from "./skill-icon";
 import React, {
   useEffect,
@@ -63,6 +63,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { api, date, encodedFile, decoded } from "./api";
 import type { SkillSummary, SkillFile } from "../shared";
+import { harnessBadgeLabel } from "../shared";
 import "@fontsource/dm-sans/400.css";
 import "@fontsource/dm-sans/500.css";
 import "@fontsource/dm-sans/600.css";
@@ -635,6 +636,7 @@ function LibraryPage() {
                       <SkillIconView icon={s.icon} />
                       <div className="skill-description">
                         <strong>{s.title === s.id ? s.id : s.title}</strong>
+                        <HarnessBadge skill={s} />
                         <p>{s.description}</p>
                       </div>
                       <span className="tag">
@@ -808,7 +810,12 @@ function SkillPage() {
           )}
           <div>
             <h1>{loaded.metadata.title}</h1>
-            <p>{loaded.metadata.tags.join(" · ") || "General workflow"}</p>
+            <p>
+              {loaded.metadata.tags.join(" · ") || "General workflow"}
+              {harnessBadgeLabel(loaded.metadata.harnessPolicy)
+                ? ` · ${harnessBadgeLabel(loaded.metadata.harnessPolicy)}`
+                : ""}
+            </p>
             {loaded.source?.type === "github" && (
               <a href={loaded.source.url} target="_blank" rel="noreferrer">
                 {loaded.source.repository}@{loaded.source.commit.slice(0, 12)}
